@@ -1,37 +1,70 @@
-// app/signup/page.tsx
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GraduationCap } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast"
+
+
 
 export default function SignupPage() {
   const router = useRouter();
+  const { signup } = useAuth();
   const [role, setRole] = useState<string>("Student");
-  const [name, setName] = useState("");
+
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+
   const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     const storedRole = localStorage.getItem("selectedSignupRole");
     if (storedRole) setRole(storedRole);
   }, []);
 
-  const handleSignup = (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleSignup = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!fullName.trim() || !email.trim() || !password.trim()) {
+    toast.error("All fields are required.");
+    return;
+  }
+
+  if (password !== confirm) {
+    toast.error("Passwords do not match.");
+    return;
+  }
+
+  try {
     setSubmitting(true);
 
-    // Save simple demo data
-    localStorage.setItem("userName", name || "User");
-    localStorage.setItem("userRole", role);
+    const res = await fetch("http://localhost:4000/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fullName, email, password, role }),
+    });
 
-    setTimeout(() => {
+    const data = await res.json();
+
+    if (!res.ok) {
+      toast.error(data.message || "Account creation failed.");
       setSubmitting(false);
-      router.push("/dashboard");
-    }, 700);
-  };
+      return;
+    }
 
+    // ⭐ Context handles saving token + user + redirect
+    signup(data.token, data.user);
+
+    toast.success("Account created successfully!");
+  } catch (err) {
+    toast.error("Unable to reach server. Try again later.");
+  } finally {
+    setSubmitting(false);
+  }
+};
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F8FAFF] to-[#EEF2FF] px-4 py-10">
       <div className="w-full max-w-[720px] mx-auto">
@@ -67,8 +100,8 @@ export default function SignupPage() {
                 <input
                   type="text"
                   placeholder="Your full name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   className="w-full bg-[#F3F4F6] rounded-lg px-3 py-2 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
                   required
                 />
@@ -117,6 +150,11 @@ export default function SignupPage() {
               </div>
             </div>
 
+            {/* Error */}
+            {errorMsg && (
+              <p className="text-red-600 text-sm mt-3">{errorMsg}</p>
+            )}
+
             <div className="mt-6">
               <button
                 type="submit"
@@ -134,7 +172,7 @@ export default function SignupPage() {
               Already have an account?{" "}
               <button
                 type="button"
-                onClick={() => router.push("/")}
+                onClick={() => router.push("/login")}
                 className="text-[#4F46E5] font-semibold hover:underline"
               >
                 Login

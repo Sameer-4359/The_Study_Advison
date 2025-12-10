@@ -1,7 +1,7 @@
-// // components/FormInput.tsx
 // "use client";
 
 // import React from "react";
+// import { formInputDefaults, formInputStyles } from "@/data/profile-s2-data/formInputData";
 
 // type FormInputProps = {
 //   label: string;
@@ -18,15 +18,13 @@
 //   type = "text",
 //   value,
 //   onChange,
-//   placeholder = "",
-//   required = false,
-//   disabled = false,
+//   placeholder = formInputDefaults.placeholder,
+//   required = formInputDefaults.required,
+//   disabled = formInputDefaults.disabled,
 // }: FormInputProps) {
 //   return (
 //     <div className="w-full">
-//       <label className="block text-sm font-medium text-gray-900 mb-2">
-//         {label}
-//       </label>
+//       <label className={formInputStyles.label}>{label}</label>
 //       <input
 //         type={type}
 //         value={value}
@@ -34,13 +32,16 @@
 //         placeholder={placeholder}
 //         required={required}
 //         disabled={disabled}
-//         className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+//         className={formInputStyles.input}
 //       />
 //     </div>
 //   );
 // }
 
-//after data 
+
+
+
+// src/components/profile-s2/FormInput.tsx
 "use client";
 
 import React from "react";
@@ -54,6 +55,10 @@ type FormInputProps = {
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
+  min?: string | number;
+  max?: string | number;
+  step?: string;
+  error?: string;
 };
 
 export default function FormInput({
@@ -64,10 +69,16 @@ export default function FormInput({
   placeholder = formInputDefaults.placeholder,
   required = formInputDefaults.required,
   disabled = formInputDefaults.disabled,
+  min,
+  max,
+  step,
+  error,
 }: FormInputProps) {
   return (
     <div className="w-full">
-      <label className={formInputStyles.label}>{label}</label>
+      <label className={formInputStyles.label}>
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
       <input
         type={type}
         value={value}
@@ -75,8 +86,16 @@ export default function FormInput({
         placeholder={placeholder}
         required={required}
         disabled={disabled}
-        className={formInputStyles.input}
+        min={min}
+        max={max}
+        step={step}
+        className={`${formInputStyles.input} ${
+          error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
+        }`}
       />
+      {error && (
+        <p className="mt-1 text-sm text-red-600">{error}</p>
+      )}
     </div>
   );
 }

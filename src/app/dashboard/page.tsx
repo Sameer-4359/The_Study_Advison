@@ -5,6 +5,8 @@ import React from "react";
 import WelcomeBanner from "@/components/std-dash-s1/WelcomeBanner";
 import FeatureCard from "@/components/std-dash-s1/FeatureCard";
 import RecentUpdates from "@/components/std-dash-s1/RecentUpdates";
+import { useProfile } from "@/hooks/useProfile"; // Add this import
+import ProfileOverview from "@/components/dashboard/ProfileOverview";
 import {
   UserCircle,
   Upload,
@@ -21,11 +23,47 @@ import {
 } from "lucide-react";
 
 export default function DashboardPage() {
+   const { stats } = useProfile();
+     const getProfileSetupStatus = () => {
+    if (stats.completionPercentage >= 90) {
+      return {
+        leftButtonText: "Completed",
+        leftButtonBg: "#D1FAE5",
+        leftButtonTextColor: "#059669",
+        progressColor: "#10B981",
+        statusIcon: Check,
+        statusIconColor: "#10B981"
+      };
+    } else if (stats.completionPercentage > 0) {
+      return {
+        leftButtonText: "In Progress",
+        leftButtonBg: "#DBEAFE",
+        leftButtonTextColor: "#2563EB",
+        progressColor: "#3B82F6",
+        statusIcon: Edit,
+        statusIconColor: "#3B82F6"
+      };
+    } else {
+      return {
+        leftButtonText: "Not Started",
+        leftButtonBg: "#F3F4F6",
+        leftButtonTextColor: "#6B7280",
+        progressColor: "#9CA3AF",
+        statusIcon: Clock,
+        statusIconColor: "#6B7280"
+      };
+    }
+  };
+
+  const profileStatus = getProfileSetupStatus();
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
       {/* Welcome Banner */}
-      <WelcomeBanner userName="ddsd" overallProgress={60} />
+      <WelcomeBanner  /> 
+      {/* userName="ddsd" overallProgress={60} */}
 
+ {/* Profile Overview */}
+      <ProfileOverview />
       {/* Feature Cards Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Profile Setup */}
@@ -35,20 +73,20 @@ export default function DashboardPage() {
           iconColor="#3B82F6"
           title="Profile Setup"
           description="Complete your personal and academic information"
-          progress={75}
-          progressColor="#111827"
-          statusIcon={Check}
-          statusIconColor="#10B981"
-          leftButton={{
-            text: "Completed",
-            bgColor: "#D1FAE5",
-            textColor: "#059669",
+          progress={stats.completionPercentage}
+           progressColor={profileStatus.progressColor}
+          statusIcon={profileStatus.statusIcon}
+          statusIconColor={profileStatus.statusIconColor}
+           leftButton={{
+            text: profileStatus.leftButtonText,
+            bgColor: profileStatus.leftButtonBg,
+            textColor: profileStatus.leftButtonTextColor,
           }}
           rightButton={{
-            text: "Review",
-            onClick: () => console.log("Review clicked"),
+            text: stats.completionPercentage > 0 ? "Review" : "Start",
+            onClick: () => window.location.href = "/profile-setup",
           }}
-          onClick={() => console.log("Profile Setup clicked")}
+          onClick={() => window.location.href = "/profile-setup"}
         />
 
         {/* Document Upload */}

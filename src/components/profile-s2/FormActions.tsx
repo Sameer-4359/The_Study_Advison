@@ -1,8 +1,8 @@
-// // components/FormActions.tsx
 // "use client";
 
 // import React from "react";
 // import { Save } from "lucide-react";
+// import { defaultFormLabels, buttonStyles } from "@/data/profile-s2-data/formActionsData";
 
 // type FormActionsProps = {
 //   onCancel: () => void;
@@ -16,8 +16,8 @@
 // export default function FormActions({
 //   onCancel,
 //   onSave,
-//   saveLabel = "Save Changes",
-//   cancelLabel = "Cancel",
+//   saveLabel = defaultFormLabels.saveLabel,
+//   cancelLabel = defaultFormLabels.cancelLabel,
 //   disabled = false,
 //   loading = false,
 // }: FormActionsProps) {
@@ -26,22 +26,25 @@
 //       <button
 //         onClick={onCancel}
 //         disabled={loading}
-//         className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+//         className={buttonStyles.cancel}
 //       >
 //         {cancelLabel}
 //       </button>
+
 //       <button
 //         onClick={onSave}
 //         disabled={disabled || loading}
-//         className="flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 shadow-sm transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+//         className={buttonStyles.save}
 //       >
 //         <Save className="w-4 h-4" />
-//         <span>{loading ? "Saving..." : saveLabel}</span>
+//         <span>{loading ? defaultFormLabels.savingText : saveLabel}</span>
 //       </button>
 //     </div>
 //   );
 // }
-//after data folder
+
+
+// src/components/profile-s2/FormActions.tsx
 "use client";
 
 import React from "react";
@@ -71,6 +74,7 @@ export default function FormActions({
         onClick={onCancel}
         disabled={loading}
         className={buttonStyles.cancel}
+        type="button"
       >
         {cancelLabel}
       </button>
@@ -78,10 +82,25 @@ export default function FormActions({
       <button
         onClick={onSave}
         disabled={disabled || loading}
-        className={buttonStyles.save}
+        className={`${buttonStyles.save} ${
+          disabled ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
+        type="button"
       >
-        <Save className="w-4 h-4" />
-        <span>{loading ? defaultFormLabels.savingText : saveLabel}</span>
+        {loading ? (
+          <>
+            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>{defaultFormLabels.savingText}</span>
+          </>
+        ) : (
+          <>
+            <Save className="w-4 h-4" />
+            <span>{saveLabel}</span>
+          </>
+        )}
       </button>
     </div>
   );

@@ -1,27 +1,4 @@
-// // components/EnableEmailButton.tsx
-// "use client";
 
-// import React from "react";
-
-// type EnableEmailButtonProps = {
-//   onClick?: () => void;
-//   label?: string;
-// };
-
-// export default function EnableEmailButton({
-//   onClick,
-//   label = "Enable Email",
-// }: EnableEmailButtonProps) {
-//   return (
-//     <button
-//       onClick={onClick}
-//       className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-semibold hover:bg-blue-100 transition-colors"
-//     >
-//       {label}
-//     </button>
-//   );
-// }
-//after data 
 "use client";
 
 import React from "react";

@@ -39,7 +39,7 @@
 //   );
 // }
 
-// after data
+
 "use client";
 
 import React from "react";

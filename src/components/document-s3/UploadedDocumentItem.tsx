@@ -125,6 +125,9 @@
 //   );
 // }
 //after data
+
+
+
 "use client";
 
 import React from "react";
@@ -200,7 +203,7 @@ export default function UploadedDocumentItem({
             <StatusIcon className={`w-4 h-4 flex-shrink-0 ${config.iconColor}`} />
           </div>
           <p className="text-xs text-gray-600">
-            Uploaded: {uploadDate} · Size: {fileSize}
+            Uploaded: {uploadDate}
           </p>
         </div>
       </div>
