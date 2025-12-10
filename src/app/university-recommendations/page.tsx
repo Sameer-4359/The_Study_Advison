@@ -375,12 +375,12 @@ const browseUniversitiesFormatted = browseUniversities.map(uni => {
 
   // Filter by search query
   const filteredUniversities = displayedUniversities.filter(uni =>
-    uni.universityName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    uni.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    uni.programs.some(program => 
-      program.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  );
+  uni.universityName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  uni.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  uni.programs.some((program: string) => 
+    program.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+);
 
   return (
     <UniversityLayout>

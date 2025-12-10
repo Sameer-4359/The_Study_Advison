@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { GraduationCap } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast"
-
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 
 export default function SignupPage() {
@@ -41,7 +41,7 @@ export default function SignupPage() {
   try {
     setSubmitting(true);
 
-    const res = await fetch("http://localhost:4000/api/auth/signup", {
+    const res = await fetch(`${API_BASE_URL}/auth/signup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fullName, email, password, role }),

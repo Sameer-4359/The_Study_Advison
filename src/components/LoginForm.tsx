@@ -5,6 +5,7 @@ import { GraduationCap } from "lucide-react";
 import RoleDropdown, { Role } from "./RoleDropDown";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -12,7 +13,7 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>("Student");
-
+  
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [showSignupRoles, setShowSignupRoles] = useState(false);
@@ -29,7 +30,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   try {
     setSubmitting(true);
 
-    const res = await fetch("http://localhost:4000/api/auth/login", {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, role }),
