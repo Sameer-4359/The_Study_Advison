@@ -7,7 +7,7 @@ export const headerData = {
 
   // Default user data
   defaultUser: {
-    name: "Muneeb",
+    name: "User",
     role: "Student",
   },
 

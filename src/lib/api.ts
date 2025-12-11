@@ -497,7 +497,7 @@ export const universityApi = {
     studentProfile: StudentProfileRequest, 
     top_k: number = 5
   ): Promise<RecommendationResponse> {
-    const response = await fetch(`${PYTHON_API_BASE_URL}/recommendations`, {
+    const response = await fetch(`${PYTHON_API_BASE_URL}/recommendations/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

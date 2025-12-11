@@ -47,19 +47,25 @@
 
 import React, { useEffect, useState } from "react";
 import { welcomeBannerData } from "@/data/std-dash-s1-data/welcomeBannerData";
+import { useAuth } from "@/context/AuthContext";
 
 export default function WelcomeBanner() {
-  const [userName, setUserName] = useState<string>(
-    welcomeBannerData.defaultUserName
-  );
+  const { user } = useAuth(); // Get user from AuthContext
   const [overallProgress, setOverallProgress] = useState<number>(
     welcomeBannerData.defaultProgress
   );
 
+  // Get user name from context (preferred) or fallback to localStorage
+  const userName = user?.fullName || 
+                   localStorage.getItem("userName") || 
+                   welcomeBannerData.defaultUserName;
+
+  // You can optionally sync the user name to localStorage for backward compatibility
   useEffect(() => {
-    const storedName = localStorage.getItem("userName");
-    if (storedName) setUserName(storedName);
-  }, []);
+    if (user?.fullName) {
+      localStorage.setItem("userName", user.fullName);
+    }
+  }, [user?.fullName]);
 
   return (
     <div className="w-full bg-gradient-to-r from-[#4F46E5] to-[#3B82F6] rounded-2xl p-6 sm:p-8 text-white">

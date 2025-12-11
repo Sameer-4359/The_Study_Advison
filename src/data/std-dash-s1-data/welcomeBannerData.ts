@@ -1,5 +1,4 @@
 // data/welcomeBannerData.ts
-
 export const welcomeBannerData = {
   defaultUserName: "User",
   defaultProgress: 60,

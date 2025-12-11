@@ -496,6 +496,7 @@ export default function UniversityCard({
       </div>
 
       {/* Match Score with Admission Chance */}
+      {(matchPercentage !== undefined && matchPercentage > 0) && (
       <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
@@ -547,6 +548,7 @@ export default function UniversityCard({
           </div>
         )}
       </div>
+      )}
 
       {/* Description */}
       {description && (
