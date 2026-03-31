@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     const systemPrompt =
       "You are an expert admissions consultant. Write a natural, human-sounding motivation letter. Follow the required structure exactly. Do not add markdown, bullets, headings, links, notes, or promotional lines. Do not mention AI. Keep language realistic and specific.";
 
-    let userPrompt = `Please write a motivation letter for:
+    const userPrompt = `Please write a motivation letter for:
 
 Student Name: ${body.name}
 Target Country: ${body.country}
@@ -27,7 +27,7 @@ ${body.achievements}
 Future Goals:
 ${body.futureGoals}
 
-${body.resumeText ? `Resume:\n${body.resumeText.substring(0, 2000)}` : ""}
+${body.resumeText ? `Resume:\n${String(body.resumeText).substring(0, 2000)}` : ""}
 `;
 
     const requiredTemplate = `Use this exact output format and paragraph order:
@@ -49,23 +49,24 @@ Rules:
 - Keep tone aligned with Preferred Tone.
 - Output only the final letter text in this format.`;
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    // Prefer GEMINI_API_KEY, but also support LOVABLE_API_KEY since you stored the Gemini key there.
+    const apiKey = process.env.GEMINI_API_KEY || process.env.LOVABLE_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: "Missing GEMINI_API_KEY" },
+        { error: "Missing GEMINI_API_KEY or LOVABLE_API_KEY" },
         { status: 500 }
       );
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `${systemPrompt}\n\n${userPrompt}\n\n${requiredTemplate}`;
     const result = await model.generateContent(prompt);
     const generatedText = result.response.text();
 
     return NextResponse.json({ letter: generatedText });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
