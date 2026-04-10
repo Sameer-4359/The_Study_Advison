@@ -1,0 +1,48 @@
+{
+  "entries": [
+    {
+      "id": "admission-cs-canada",
+      "title": "Computer Science Admission Requirements in Canada",
+      "tags": [
+        "admission",
+        "requirements",
+        "computer",
+        "science",
+        "canada",
+        "gpa",
+        "ielts"
+      ],
+      "content": "For many Computer Science programs in Canada, common expectations include a strong academic record, GPA around 3.0 to 3.7 (or equivalent), and IELTS around 6.5 to 7.0. Exact requirements vary by university and by undergraduate vs postgraduate level."
+    },
+    {
+      "id": "ielts-guidance",
+      "title": "IELTS Guidance for Competitive Programs",
+      "tags": ["ielts", "language", "english", "score"],
+      "content": "Many competitive programs ask for IELTS 6.5 to 7.0 overall. Some may require stronger writing or speaking bands. Students should always verify department-level requirements before applying."
+    },
+    {
+      "id": "scholarships",
+      "title": "Scholarships and Funding",
+      "tags": ["scholarship", "funding", "financial", "aid"],
+      "content": "Common options include merit-based entrance scholarships, need-based support, and program-specific grants. Applying early and submitting complete documents usually improves scholarship outcomes."
+    },
+    {
+      "id": "timeline",
+      "title": "Application Timeline",
+      "tags": ["timeline", "application", "deadline", "process"],
+      "content": "A practical timeline is to start 8 to 10 months before intake. Test preparation and document collection may take 1 to 2 months, and admissions decisions can take several weeks after submission."
+    },
+    {
+      "id": "job-prospects",
+      "title": "Career Prospects After Graduation",
+      "tags": ["career", "jobs", "employment", "prospects"],
+      "content": "Graduates commonly pursue software engineering, data roles, cloud engineering, and security positions. Career outcomes depend on technical skills, internships, portfolio quality, and communication skills."
+    },
+    {
+      "id": "value-for-money",
+      "title": "Evaluating Value for Money",
+      "tags": ["value", "money", "budget", "tuition", "cost"],
+      "content": "To evaluate value for money, compare tuition, living cost, scholarship availability, internship/co-op opportunities, and post-study work outcomes, not tuition alone."
+    }
+  ]
+}

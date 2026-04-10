@@ -283,7 +283,9 @@ export default function AISopWriterPage() {
       "futureGoals",
       "tone",
     ];
-    const filled = fields.filter((k) => String(formData[k]).trim() !== "").length;
+    const filled = fields.filter(
+      (k) => String(formData[k]).trim() !== "",
+    ).length;
     return Math.round((filled / fields.length) * 100);
   }, [formData]);
 
@@ -304,19 +306,27 @@ export default function AISopWriterPage() {
     toast.loading("Processing resume…", { id: "resume" });
 
     try {
-      const text = await file.text();
+      const payload = new FormData();
+      payload.append("resume", file);
+
       const res = await fetch("/api/demo/parse-resume", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resumeText: text }),
+        body: payload,
       });
 
-      if (!res.ok) throw new Error("Resume parsing failed.");
-      const data: { name?: string; achievements?: string } = await res.json();
+      const data: {
+        name?: string;
+        achievements?: string;
+        extractedText?: string;
+        error?: string;
+      } = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Resume parsing failed.");
+      }
 
       setFormData((prev) => ({
         ...prev,
-        resumeText: text,
+        resumeText: data.extractedText ?? prev.resumeText,
         achievements: data.achievements ?? prev.achievements,
         name: data.name ?? prev.name,
       }));
@@ -324,8 +334,12 @@ export default function AISopWriterPage() {
       toast.success("Resume processed. Auto-filled details where possible.", {
         id: "resume",
       });
-    } catch {
-      toast.error("Couldn’t process resume. Please fill fields manually.", {
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Couldn’t process resume. Please fill fields manually.";
+      toast.error(message, {
         id: "resume",
       });
     } finally {
@@ -343,14 +357,20 @@ export default function AISopWriterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      if (!res.ok) throw new Error("Generation failed.");
-      const data: { letter: string } = await res.json();
+      const data: { letter?: string; error?: string } = await res.json();
+      if (!res.ok || !data.letter) {
+        throw new Error(data.error || "Generation failed.");
+      }
 
       setGeneratedLetter(data.letter);
       setActiveTab("review");
       toast.success("SOP generated (demo).", { id: "generate" });
-    } catch {
-      toast.error("Generation failed (demo). Try again.", { id: "generate" });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Generation failed (demo). Try again.";
+      toast.error(message, { id: "generate" });
     } finally {
       setLoading(false);
     }
@@ -419,7 +439,8 @@ export default function AISopWriterPage() {
                       disabled={loading}
                     />
                     <p className="mt-2 text-xs text-gray-500">
-                      Demo parser reads text content only (best with .txt for now).
+                      Supports .pdf, .docx, and .txt. Text-based files work
+                      best.
                     </p>
                   </div>
                 </div>

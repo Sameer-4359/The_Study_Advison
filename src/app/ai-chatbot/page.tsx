@@ -19,6 +19,7 @@ type Message = {
   timestamp: string;
 };
 
+const CHAT_API_URL = "/api/demo/chatbot";
 
 const suggestedQuestions = [
   "What are the admission requirements for Computer Science programs in Canada?",
@@ -50,39 +51,17 @@ export default function AIChatbotPage() {
     scrollToBottom();
   }, [messages]);
 
-  const generateResponse = (question: string): string => {
-    // Simple response logic - replace with actual API call
-    const responses: { [key: string]: string } = {
-      admission:
-        "For Computer Science programs in Canada, most universities require a minimum GPA of 3.0-3.7, IELTS score of 6.5-7.0, and relevant coursework in mathematics and sciences. Specific requirements vary by university.",
-      value:
-        "Universities like University of Waterloo, University of British Columbia, and McGill University offer excellent value with strong industry connections, co-op programs, and competitive tuition rates.",
-      ielts:
-        "Top universities typically require IELTS scores of 6.5-7.0 overall, with no band below 6.0. Some programs may have higher requirements, especially for graduate studies.",
-      scholarship:
-        "We have partnerships with universities offering merit-based scholarships ranging from $5,000 to full tuition coverage. International students can also apply for entrance scholarships and program-specific awards.",
-      prospects:
-        "Computer Science graduates from Canadian universities have excellent job prospects with 85%+ employment rate within 6 months. Average starting salaries range from $60,000-$90,000 CAD.",
-      process:
-        "The application process typically takes 3-6 months from document submission to admission decision. We recommend starting at least 8-10 months before your intended start date.",
-    };
-
-    const lowerQuestion = question.toLowerCase();
-    for (const [key, response] of Object.entries(responses)) {
-      if (lowerQuestion.includes(key)) {
-        return response;
-      }
+  const handleSendMessage = async (message: string) => {
+    const trimmed = message.trim();
+    if (!trimmed) {
+      return;
     }
 
-    return "That's a great question! I can help you with information about admission requirements, programs, scholarships, and more. Could you please provide more specific details about what you'd like to know?";
-  };
-
-  const handleSendMessage = async (message: string) => {
     // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       type: "user",
-      message,
+      message: trimmed,
       timestamp: new Date().toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
@@ -93,12 +72,25 @@ export default function AIChatbotPage() {
     setMessages((prev) => [...prev, userMessage]);
     setIsTyping(true);
 
-    // Simulate AI response delay
-    setTimeout(() => {
+    try {
+      const response = await fetch(CHAT_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: trimmed }),
+      });
+
+      const data: { answer?: string; error?: string } = await response.json();
+      const answer =
+        response.ok && data.answer
+          ? data.answer
+          : data.error || "Sorry, I could not generate a response right now.";
+
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: "bot",
-        message: generateResponse(message),
+        message: answer,
         timestamp: new Date().toLocaleTimeString("en-US", {
           hour: "numeric",
           minute: "2-digit",
@@ -107,8 +99,23 @@ export default function AIChatbotPage() {
       };
 
       setMessages((prev) => [...prev, botResponse]);
+    } catch {
+      const botResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: "bot",
+        message:
+          "Sorry, I could not reach the chat service. Please try again in a moment.",
+        timestamp: new Date().toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        }),
+      };
+
+      setMessages((prev) => [...prev, botResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handleSuggestedQuestion = (question: string) => {

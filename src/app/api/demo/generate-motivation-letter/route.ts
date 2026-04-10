@@ -1,33 +1,88 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
+type Tone = "formal" | "passionate" | "academic";
+
+const TONE_PROFILES: Record<Tone, string> = {
+  formal:
+    "Use polished professional language, concise sentences, and measured confidence. Avoid emotional overstatement.",
+  passionate:
+    "Use energetic but credible language, slightly warmer phrasing, and authentic enthusiasm without exaggeration.",
+  academic:
+    "Use analytical language, research-oriented framing, and evidence-driven claims with precise terminology.",
+};
+
+function sanitizeInput(value: unknown): string {
+  return String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function buildSystemPrompt(tone: Tone): string {
+  return [
+    "You are a senior graduate admissions writing consultant.",
+    "Write one complete SOP/motivation letter that sounds human, specific, and realistic.",
+    "Do not output markdown, headings, bullet points, JSON, analysis notes, or placeholders.",
+    "Never mention AI, model, prompt, or that data is missing.",
+    "Avoid fabricated concrete claims (exact grades, years, project names) unless provided.",
+    "If some details are missing, use safe, plausible, generic phrasing that still sounds personal.",
+    `Tone requirement: ${TONE_PROFILES[tone]}`,
+  ].join(" ");
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    const tone = (sanitizeInput(body.tone).toLowerCase() ||
+      "passionate") as Tone;
+    const resolvedTone: Tone =
+      tone === "formal" || tone === "academic" || tone === "passionate"
+        ? tone
+        : "passionate";
 
-    const systemPrompt =
-      "You are an expert admissions consultant. Write a natural, human-sounding motivation letter. Follow the required structure exactly. Do not add markdown, bullets, headings, links, notes, or promotional lines. Do not mention AI. Keep language realistic and specific.";
+    const requiredFields = [
+      "name",
+      "country",
+      "university",
+      "program",
+    ] as const;
+    const missingRequired = requiredFields.filter(
+      (field) => !sanitizeInput(body[field]),
+    );
+
+    if (missingRequired.length > 0) {
+      return NextResponse.json(
+        {
+          error: `Missing required fields: ${missingRequired.join(", ")}`,
+        },
+        { status: 400 },
+      );
+    }
+
+    const systemPrompt = buildSystemPrompt(resolvedTone);
 
     const userPrompt = `Please write a motivation letter for:
 
-Student Name: ${body.name}
-Target Country: ${body.country}
-University: ${body.university}
-Program: ${body.program}
-Preferred Tone: ${body.tone}
+Student Name: ${sanitizeInput(body.name)}
+Target Country: ${sanitizeInput(body.country)}
+University: ${sanitizeInput(body.university)}
+Program: ${sanitizeInput(body.program)}
+Preferred Tone: ${resolvedTone}
 
 Why This University:
-${body.whyUniversity || "Not specified"}
+${sanitizeInput(body.whyUniversity) || "Not specified"}
 
-${body.courseDetails ? `Courses:\n${body.courseDetails}` : ""}
+${sanitizeInput(body.courseDetails) ? `Courses:\n${sanitizeInput(body.courseDetails)}` : ""}
 
 Achievements:
-${body.achievements}
+${sanitizeInput(body.achievements) || "Not specified"}
 
 Future Goals:
-${body.futureGoals}
+${sanitizeInput(body.futureGoals) || "Not specified"}
 
-${body.resumeText ? `Resume:\n${String(body.resumeText).substring(0, 2000)}` : ""}
+${sanitizeInput(body.resumeText) ? `Resume:\n${sanitizeInput(body.resumeText).slice(0, 4000)}` : ""}
 `;
 
     const requiredTemplate = `Use this exact output format and paragraph order:
@@ -46,7 +101,7 @@ Yours sincerely,
 Rules:
 - Replace bracket placeholders using the student data.
 - If data is missing, infer a realistic, non-generic detail from available context.
-- Keep tone aligned with Preferred Tone.
+- Keep tone aligned with Preferred Tone and remain internally consistent.
 - Output only the final letter text in this format.`;
 
     // Prefer GEMINI_API_KEY, but also support LOVABLE_API_KEY since you stored the Gemini key there.
@@ -54,7 +109,7 @@ Rules:
     if (!apiKey) {
       return NextResponse.json(
         { error: "Missing GEMINI_API_KEY or LOVABLE_API_KEY" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -65,9 +120,17 @@ Rules:
     const result = await model.generateContent(prompt);
     const generatedText = result.response.text();
 
+    if (!generatedText?.trim()) {
+      return NextResponse.json(
+        { error: "Model returned an empty response." },
+        { status: 502 },
+      );
+    }
+
     return NextResponse.json({ letter: generatedText });
-  } catch {
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unexpected server error.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
