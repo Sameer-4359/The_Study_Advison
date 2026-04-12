@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     const prompt = [
       "Answer ONLY from the context below.",
-      "If context is insufficient, reply exactly: Mujhe iska jawab nahi pata.",
+      "If context is insufficient, reply exactly: Currently i do not have enough information to answer this question",
       "Do not guess and do not use external knowledge.",
       "Keep the answer concise and student-friendly.",
       "",
