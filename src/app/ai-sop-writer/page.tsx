@@ -196,7 +196,7 @@
 
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import Breadcrumb from "@/components/document-s3/Breadcrumb";
 import PageHeader from "@/components/document-s3/PageHeader";
@@ -205,6 +205,8 @@ import FormSectionCard from "@/components/profile-s2/FormSectionCard";
 import FormInput from "@/components/profile-s2/FormInput";
 import FormSelect from "@/components/profile-s2/FormSelect";
 import FormActions from "@/components/profile-s2/FormActions";
+import { useAuth } from "@/context/AuthContext";
+import { jsPDF } from "jspdf";
 
 type FormData = {
   name: string;
@@ -255,9 +257,27 @@ function TextAreaField({
 }
 
 export default function AISopWriterPage() {
+  const { token } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [savingPdf, setSavingPdf] = useState(false);
   const [activeTab, setActiveTab] = useState<"form" | "review">("form");
   const [generatedLetter, setGeneratedLetter] = useState("");
+  const [latestSopReview, setLatestSopReview] = useState<{
+    id: number;
+    status: string;
+    reviewNotes: string | null;
+    reviewedAt?: string | null;
+    comments: Array<{
+      id: number;
+      body: string;
+      createdAt: string;
+      author?: {
+        fullName?: string;
+        role?: string;
+      } | null;
+    }>;
+  } | null>(null);
+  const [loadingSopReview, setLoadingSopReview] = useState(true);
   const [formData, setFormData] = useState<FormData>({
     name: "",
     country: "",
@@ -288,6 +308,127 @@ export default function AISopWriterPage() {
     ).length;
     return Math.round((filled / fields.length) * 100);
   }, [formData]);
+
+  const renderSopPdfBlob = (title: string, content: string) => {
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const marginX = 48;
+    const topY = 56;
+    const lineHeight = 18;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const maxTextWidth = doc.internal.pageSize.getWidth() - marginX * 2;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text(title || "Statement of Purpose", marginX, topY);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+
+    const lines = doc.splitTextToSize(content, maxTextWidth);
+    let y = topY + 28;
+
+    lines.forEach((line: string) => {
+      if (y > pageHeight - 48) {
+        doc.addPage();
+        y = 56;
+      }
+      doc.text(line, marginX, y);
+      y += lineHeight;
+    });
+
+    return doc.output("blob");
+  };
+
+  const loadSopReview = async () => {
+    if (!token) {
+      setLoadingSopReview(false);
+      return;
+    }
+
+    try {
+      setLoadingSopReview(true);
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+
+      const listRes = await fetch(`${baseUrl}/student/sop`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!listRes.ok) {
+        throw new Error("Failed to load SOP status");
+      }
+
+      const listData: {
+        sops?: Array<{
+          id: number;
+          status: string;
+          reviewNotes?: string | null;
+          reviewedAt?: string | null;
+          updatedAt?: string;
+          createdAt?: string;
+        }>;
+      } = await listRes.json();
+
+      const latest = (listData.sops || [])[0];
+      if (!latest) {
+        setLatestSopReview(null);
+        return;
+      }
+
+      const detailRes = await fetch(`${baseUrl}/student/sop/${latest.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!detailRes.ok) {
+        throw new Error("Failed to load SOP details");
+      }
+
+      const detailData: {
+        sop?: {
+          id: number;
+          status: string;
+          reviewNotes?: string | null;
+          reviewedAt?: string | null;
+          comments?: Array<{
+            id: number;
+            body: string;
+            createdAt: string;
+            author?: {
+              fullName?: string;
+              role?: string;
+            } | null;
+          }>;
+        };
+      } = await detailRes.json();
+
+      if (!detailData.sop) {
+        setLatestSopReview(null);
+        return;
+      }
+
+      setLatestSopReview({
+        id: detailData.sop.id,
+        status: detailData.sop.status,
+        reviewNotes: detailData.sop.reviewNotes || null,
+        reviewedAt: detailData.sop.reviewedAt || null,
+        comments: detailData.sop.comments || [],
+      });
+    } catch (error) {
+      console.error("Failed to load SOP review status", error);
+    } finally {
+      setLoadingSopReview(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSopReview();
+  }, [token]);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -364,15 +505,81 @@ export default function AISopWriterPage() {
 
       setGeneratedLetter(data.letter);
       setActiveTab("review");
-      toast.success("SOP generated (demo).", { id: "generate" });
+      toast.success("SOP generated successfully.", { id: "generate" });
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : "Generation failed (demo). Try again.";
+          : "Generation failed. Try again.";
       toast.error(message, { id: "generate" });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSavePdfVersion = async (submit = false) => {
+    if (!token) {
+      toast.error("Please login first.");
+      return;
+    }
+
+    if (!generatedLetter.trim()) {
+      toast.error("Please generate or write SOP content before saving PDF.");
+      return;
+    }
+
+    const title =
+      `${formData.university || "University"} ${formData.program || "Program"} SOP`.trim();
+
+    setSavingPdf(true);
+    toast.loading(
+      submit ? "Saving and submitting SOP PDF..." : "Saving SOP PDF version...",
+      {
+        id: "save-pdf",
+      },
+    );
+
+    try {
+      const pdfBlob = renderSopPdfBlob(title, generatedLetter);
+      const file = new File([pdfBlob], `sop-${Date.now()}.pdf`, {
+        type: "application/pdf",
+      });
+
+      const body = new FormData();
+      body.append("file", file);
+      body.append("title", title);
+      body.append("content", generatedLetter);
+      body.append("submit", submit ? "true" : "false");
+
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+      const response = await fetch(`${baseUrl}/student/sop/save-pdf-version`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body,
+      });
+
+      const payload: { message?: string } = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.message || "Failed to save SOP PDF");
+      }
+
+      toast.success(
+        submit
+          ? "SOP PDF version saved and submitted."
+          : "SOP PDF version saved successfully.",
+        { id: "save-pdf" },
+      );
+
+      await loadSopReview();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to save SOP PDF";
+      toast.error(message, { id: "save-pdf" });
+    } finally {
+      setSavingPdf(false);
     }
   };
 
@@ -407,16 +614,54 @@ export default function AISopWriterPage() {
 
         <PageHeader
           title="AI SOP Writer"
-          description="Demo SOP generator wired to local API endpoints (replace later with Node.js)."
+          description="Generate and refine your Statement of Purpose."
           completionPercentage={progress}
         />
 
         <div className="mt-6 space-y-6">
+          {loadingSopReview ? (
+            <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-600">
+              Loading latest SOP review status...
+            </div>
+          ) : latestSopReview ? (
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+              <h3 className="text-sm font-semibold text-blue-900">
+                Latest Counselor SOP Feedback
+              </h3>
+              <p className="text-xs text-blue-800 mt-1">
+                Status: {latestSopReview.status}
+              </p>
+              {latestSopReview.reviewNotes && (
+                <p className="text-xs text-gray-700 mt-2">
+                  Notes: {latestSopReview.reviewNotes}
+                </p>
+              )}
+              {(latestSopReview.comments || [])
+                .filter(
+                  (item) =>
+                    String(item.author?.role || "").toLowerCase() ===
+                    "counselor",
+                )
+                .slice(-2)
+                .map((item) => (
+                  <div
+                    key={`sop-comment-${item.id}`}
+                    className="mt-2 rounded-lg border border-blue-100 bg-white p-2"
+                  >
+                    <p className="text-xs font-medium text-gray-900">
+                      {item.author?.fullName || "Counselor"}
+                    </p>
+                    <p className="text-xs text-gray-700 mt-1">{item.body}</p>
+                  </div>
+                ))}
+            </div>
+          ) : null}
+
           {activeTab === "form" && (
             <>
               <FormSectionCard
                 title="Personal Information"
-                description="Basic details (demo)"
+                description="Basic details"
               >
                 <div className="space-y-4">
                   <FormInput
@@ -531,7 +776,7 @@ export default function AISopWriterPage() {
                 <FormActions
                   onCancel={handleCancel}
                   onSave={handleGenerate}
-                  saveLabel="Generate SOP (Demo API)"
+                  saveLabel="Generate SOP"
                   loading={loading}
                 />
               </div>
@@ -541,7 +786,7 @@ export default function AISopWriterPage() {
           {activeTab === "review" && (
             <FormSectionCard
               title="Review & Edit"
-              description="This is a demo-generated SOP. You can copy and refine it."
+              description="Review, edit, and finalize your SOP draft."
             >
               <div className="space-y-4">
                 <textarea
@@ -562,6 +807,25 @@ export default function AISopWriterPage() {
                     cancelLabel="Back to Form"
                     loading={false}
                   />
+
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      disabled={savingPdf}
+                      onClick={() => handleSavePdfVersion(false)}
+                      className="px-4 py-2.5 rounded-lg text-sm font-medium border border-blue-200 text-blue-700 hover:bg-blue-50 disabled:opacity-60"
+                    >
+                      Save as PDF Version
+                    </button>
+                    <button
+                      type="button"
+                      disabled={savingPdf}
+                      onClick={() => handleSavePdfVersion(true)}
+                      className="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                    >
+                      Save PDF and Submit
+                    </button>
+                  </div>
                 </div>
               </div>
             </FormSectionCard>

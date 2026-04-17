@@ -5,7 +5,7 @@ import React from "react";
 import StepCard from "@/components/progress-s7/StepCard";
 
 export default function ApplicationSteps() {
-  const steps = [
+  const steps: Array<React.ComponentProps<typeof StepCard>> = [
     {
       id: "profile",
       title: "Profile Setup",

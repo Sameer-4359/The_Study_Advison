@@ -1,27 +1,27 @@
 // src/lib/types/document.ts
-export type DocumentType = 
-  | 'ACADEMIC_TRANSCRIPT'
-  | 'DEGREE_DIPLOMA'
-  | 'LANGUAGE_PROFICIENCY'
-  | 'PASSPORT_COPY'
-  | 'RESUME_CV'
-  | 'STATEMENT_OF_PURPOSE';
+export type DocumentType =
+  | "ACADEMIC_TRANSCRIPT"
+  | "DEGREE_DIPLOMA"
+  | "LANGUAGE_PROFICIENCY"
+  | "PASSPORT_COPY"
+  | "RESUME_CV"
+  | "STATEMENT_OF_PURPOSE";
 
-export type DisplayDocumentType = 
-  | 'Academic Transcripts'
-  | 'Degree/Diploma Certificates'
-  | 'Language Proficiency'
-  | 'Passport Copy'
-  | 'Resume/CV'
-  | 'Statement of Purpose';
+export type DisplayDocumentType =
+  | "Academic Transcripts"
+  | "Degree/Diploma Certificates"
+  | "Language Proficiency"
+  | "Passport Copy"
+  | "Resume/CV"
+  | "Statement of Purpose";
 
 export interface DocumentTypeMap {
-  'Academic Transcripts': DocumentType;
-  'Degree/Diploma Certificates': DocumentType;
-  'Language Proficiency': DocumentType;
-  'Passport Copy': DocumentType;
-  'Resume/CV': DocumentType;
-  'Statement of Purpose': DocumentType;
+  "Academic Transcripts": DocumentType;
+  "Degree/Diploma Certificates": DocumentType;
+  "Language Proficiency": DocumentType;
+  "Passport Copy": DocumentType;
+  "Resume/CV": DocumentType;
+  "Statement of Purpose": DocumentType;
 }
 
 export interface BackendDocument {
@@ -31,6 +31,18 @@ export interface BackendDocument {
   fileUrl: string;
   fileName: string;
   createdAt: string;
+  verificationStatus?:
+    | "Pending"
+    | "Approved"
+    | "Reupload Requested"
+    | "Rejected";
+  reviewedAt?: string | null;
+  reviewNote?: string | null;
+  reviewedBy?: {
+    id: number;
+    fullName: string;
+    role: string;
+  } | null;
 }
 
 export interface UploadDocumentResponse {

@@ -59,9 +59,6 @@
 //   );
 // }
 
-
-
-
 // src/components/document-s3/UploadedDocumentsSection.tsx
 "use client";
 
@@ -79,7 +76,12 @@ export default function UploadedDocumentsSection({
     fileName: string;
     fileSize: number;
     uploadDate: string;
-    status: "verified" | "under-review" | "pending";
+    status:
+      | "verified"
+      | "under-review"
+      | "pending"
+      | "reupload-requested"
+      | "rejected";
     fileUrl: string;
   }[];
   onView?: (id: string) => void;
@@ -89,24 +91,31 @@ export default function UploadedDocumentsSection({
   // Group documents by type for better organization
   const getDocumentType = (fileName: string) => {
     const lowerName = fileName.toLowerCase();
-    if (lowerName.includes('transcript')) return 'Academic Transcript';
-    if (lowerName.includes('degree') || lowerName.includes('diploma')) return 'Degree Certificate';
-    if (lowerName.includes('ielts') || lowerName.includes('toefl')) return 'Language Proficiency';
-    if (lowerName.includes('passport')) return 'Passport';
-    if (lowerName.includes('resume') || lowerName.includes('cv')) return 'Resume/CV';
-    if (lowerName.includes('sop') || lowerName.includes('statement')) return 'Statement of Purpose';
-    return 'Other';
+    if (lowerName.includes("transcript")) return "Academic Transcript";
+    if (lowerName.includes("degree") || lowerName.includes("diploma"))
+      return "Degree Certificate";
+    if (lowerName.includes("ielts") || lowerName.includes("toefl"))
+      return "Language Proficiency";
+    if (lowerName.includes("passport")) return "Passport";
+    if (lowerName.includes("resume") || lowerName.includes("cv"))
+      return "Resume/CV";
+    if (lowerName.includes("sop") || lowerName.includes("statement"))
+      return "Statement of Purpose";
+    return "Other";
   };
 
   // Group documents by type
-  const groupedDocuments = documents.reduce((acc, doc) => {
-    const type = getDocumentType(doc.fileName);
-    if (!acc[type]) {
-      acc[type] = [];
-    }
-    acc[type].push(doc);
-    return acc;
-  }, {} as Record<string, typeof documents>);
+  const groupedDocuments = documents.reduce(
+    (acc, doc) => {
+      const type = getDocumentType(doc.fileName);
+      if (!acc[type]) {
+        acc[type] = [];
+      }
+      acc[type].push(doc);
+      return acc;
+    },
+    {} as Record<string, typeof documents>,
+  );
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
@@ -160,9 +169,12 @@ export default function UploadedDocumentsSection({
               />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No documents yet</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No documents yet
+          </h3>
           <p className="text-gray-500 text-sm max-w-md mx-auto">
-            Start by uploading your documents using the upload cards above. Your progress will be tracked automatically.
+            Start by uploading your documents using the upload cards above. Your
+            progress will be tracked automatically.
           </p>
         </div>
       )}

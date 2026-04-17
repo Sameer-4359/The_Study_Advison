@@ -3,14 +3,14 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GraduationCap } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import toast from "react-hot-toast"
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
-
+import toast from "react-hot-toast";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 export default function SignupPage() {
   const router = useRouter();
   const { signup } = useAuth();
-  const [role, setRole] = useState<string>("Student");
+  const [role, setRole] = useState<string>("student");
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -22,49 +22,51 @@ export default function SignupPage() {
 
   useEffect(() => {
     const storedRole = localStorage.getItem("selectedSignupRole");
-    if (storedRole) setRole(storedRole);
+    if (storedRole) setRole(storedRole.trim().toLowerCase());
   }, []);
 
- const handleSignup = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
 
-  if (!fullName.trim() || !email.trim() || !password.trim()) {
-    toast.error("All fields are required.");
-    return;
-  }
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  if (password !== confirm) {
-    toast.error("Passwords do not match.");
-    return;
-  }
-
-  try {
-    setSubmitting(true);
-
-    const res = await fetch(`${API_BASE_URL}/auth/signup`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, email, password, role }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      toast.error(data.message || "Account creation failed.");
-      setSubmitting(false);
+    if (!fullName.trim() || !email.trim() || !password.trim()) {
+      toast.error("All fields are required.");
       return;
     }
 
-    // ⭐ Context handles saving token + user + redirect
-    signup(data.token, data.user);
+    if (password !== confirm) {
+      toast.error("Passwords do not match.");
+      return;
+    }
 
-    toast.success("Account created successfully!");
-  } catch (err) {
-    toast.error("Unable to reach server. Try again later.");
-  } finally {
-    setSubmitting(false);
-  }
-};
+    try {
+      setSubmitting(true);
+
+      const res = await fetch(`${API_BASE_URL}/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName, email, password, role }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message || "Account creation failed.");
+        setSubmitting(false);
+        return;
+      }
+
+      // ⭐ Context handles saving token + user + redirect
+      signup(data.token, data.user);
+
+      toast.success("Account created successfully!");
+    } catch (err) {
+      toast.error("Unable to reach server. Try again later.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F8FAFF] to-[#EEF2FF] px-4 py-10">
       <div className="w-full max-w-[720px] mx-auto">
@@ -82,11 +84,11 @@ export default function SignupPage() {
               className="font-semibold mb-2 text-[22px] sm:text-[28px] md:text-[32px] leading-tight"
               style={{ color: "#4169E1" }}
             >
-              Sign Up as {role}
+              Sign Up as {roleLabel}
             </h1>
 
             <p className="text-sm sm:text-[16px] text-[#6B7280] mb-6 sm:mb-8">
-              Create your {role} account to begin your journey
+              Create your {roleLabel} account to begin your journey
             </p>
           </div>
 
@@ -161,7 +163,8 @@ export default function SignupPage() {
                 disabled={submitting}
                 className="w-full rounded-lg px-6 py-3 font-semibold text-white text-[16px] hover:opacity-90 transition"
                 style={{
-                  background: "linear-gradient(90deg, #818CF8 0%, #A78BFA 100%)",
+                  background:
+                    "linear-gradient(90deg, #818CF8 0%, #A78BFA 100%)",
                 }}
               >
                 {submitting ? "Creating account..." : "Create Account"}

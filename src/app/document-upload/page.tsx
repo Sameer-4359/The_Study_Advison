@@ -386,12 +386,12 @@
 //   const [stagedFiles, setStagedFiles] = useState<Record<DisplayDocumentType, File | null>>(
 //     {} as Record<DisplayDocumentType, File | null>
 //   );
-  
+
 //   // uploading state per document type
 //   const [uploading, setUploading] = useState<Record<DisplayDocumentType, boolean>>(
 //     {} as Record<DisplayDocumentType, boolean>
 //   );
-  
+
 //   // For updating documents
 //   const [updatingDocId, setUpdatingDocId] = useState<number | null>(null);
 
@@ -452,7 +452,7 @@
 
 //     try {
 //       setUploading((u) => ({ ...u, [title]: true }));
-      
+
 //       // Check if document type already exists
 //       const existingDoc = getAllDocumentStatus().find(
 //         status => status.displayName === title && status.isUploaded
@@ -586,7 +586,7 @@
 //             const existingDoc = getAllDocumentStatus().find(
 //               status => status.displayName === card.title && status.isUploaded
 //             );
-            
+
 //             return (
 //               <div key={card.title}>
 //                 <DocumentCard
@@ -635,11 +635,9 @@
 //   );
 // }
 
-
-
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import Breadcrumb from "@/components/document-s3/Breadcrumb";
 import PageHeader from "@/components/document-s3/PageHeader";
 import ProgressSection from "@/components/document-s3/ProgressSection";
@@ -705,26 +703,29 @@ export default function DocumentUploadPage() {
   } = useDocuments();
 
   // stagedFiles keyed by DisplayDocumentType
-  const [stagedFiles, setStagedFiles] = useState<Record<DisplayDocumentType, File | null>>(
-    {} as Record<DisplayDocumentType, File | null>
-  );
-  
+  const [stagedFiles, setStagedFiles] = useState<
+    Record<DisplayDocumentType, File | null>
+  >({} as Record<DisplayDocumentType, File | null>);
+
   // uploading state per document type
-  const [uploading, setUploading] = useState<Record<DisplayDocumentType, boolean>>(
-    {} as Record<DisplayDocumentType, boolean>
-  );
-  
+  const [uploading, setUploading] = useState<
+    Record<DisplayDocumentType, boolean>
+  >({} as Record<DisplayDocumentType, boolean>);
+
   // For updating documents
   const [updatingDocId, setUpdatingDocId] = useState<number | null>(null);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
-  const [documentToDelete, setDocumentToDelete] = useState<{ id: number; fileName: string } | null>(null);
+  const [documentToDelete, setDocumentToDelete] = useState<{
+    id: number;
+    fileName: string;
+  } | null>(null);
 
   // hidden file inputs refs per doc card
-  const inputRefs = useRef<Record<DisplayDocumentType, HTMLInputElement | null>>(
-    {} as Record<DisplayDocumentType, HTMLInputElement | null>
-  );
+  const inputRefs = useRef<
+    Record<DisplayDocumentType, HTMLInputElement | null>
+  >({} as Record<DisplayDocumentType, HTMLInputElement | null>);
 
   const maxFileSize = 10 * 1024 * 1024; // 10 MB
   const allowedTypes = [
@@ -741,7 +742,10 @@ export default function DocumentUploadPage() {
     if (ref) ref.click();
   };
 
-  const handleFileChange = (title: DisplayDocumentType, files: FileList | null) => {
+  const handleFileChange = (
+    title: DisplayDocumentType,
+    files: FileList | null,
+  ) => {
     if (!files || !files.length) return;
     const file = files[0];
 
@@ -778,10 +782,10 @@ export default function DocumentUploadPage() {
 
     try {
       setUploading((u) => ({ ...u, [title]: true }));
-      
+
       // Check if document type already exists
       const existingDoc = getAllDocumentStatus().find(
-        status => status.displayName === title && status.isUploaded
+        (status) => status.displayName === title && status.isUploaded,
       );
 
       if (existingDoc?.document) {
@@ -804,7 +808,7 @@ export default function DocumentUploadPage() {
       // Reload documents to get updated list
       await loadDocuments();
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error("Upload error:", error);
     } finally {
       setUploading((u) => ({ ...u, [title]: false }));
       setUpdatingDocId(null);
@@ -853,19 +857,40 @@ export default function DocumentUploadPage() {
     setDocumentToDelete(null);
   };
 
+  const toUiStatus = (verificationStatus?: string) => {
+    switch (verificationStatus) {
+      case "Approved":
+        return "verified" as const;
+      case "Reupload Requested":
+        return "reupload-requested" as const;
+      case "Rejected":
+        return "rejected" as const;
+      case "Pending":
+      default:
+        return "under-review" as const;
+    }
+  };
+
   // Format documents for the UploadedDocumentsSection
-  const formattedDocuments = documents.map(doc => ({
+  const formattedDocuments = documents.map((doc) => ({
     id: doc.id.toString(),
     fileName: doc.fileName,
     fileSize: doc.fileSize || 0,
-    uploadDate: new Date(doc.createdAt).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    uploadDate: new Date(doc.createdAt).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     }),
-    status: "under-review" as const,
+    status: toUiStatus(doc.verificationStatus),
     fileUrl: doc.fileUrl,
   }));
+
+  const reviewedDocuments = documents.filter(
+    (doc) =>
+      doc.verificationStatus &&
+      doc.verificationStatus !== "Pending" &&
+      doc.verificationStatus !== "Approved",
+  );
 
   // Get status for each document type
   const getDocumentStatus = (title: DisplayDocumentType) => {
@@ -919,9 +944,10 @@ export default function DocumentUploadPage() {
             {DOCUMENT_CARDS.map((card) => {
               const isUploaded = getDocumentStatus(card.title) === "uploaded";
               const existingDoc = getAllDocumentStatus().find(
-                status => status.displayName === card.title && status.isUploaded
+                (status) =>
+                  status.displayName === card.title && status.isUploaded,
               );
-              
+
               return (
                 <div key={card.title}>
                   <DocumentCard
@@ -933,7 +959,10 @@ export default function DocumentUploadPage() {
                     onUpload={() => doUpload(card.title)}
                     stagedFile={stagedFiles[card.title] ?? null}
                     onRemoveStaged={() => handleRemoveStaged(card.title)}
-                    uploading={!!uploading[card.title] || (existingDoc?.document?.id === updatingDocId)}
+                    uploading={
+                      !!uploading[card.title] ||
+                      existingDoc?.document?.id === updatingDocId
+                    }
                     isUpdate={isUploaded && !!stagedFiles[card.title]}
                   />
 
@@ -945,7 +974,9 @@ export default function DocumentUploadPage() {
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     className="hidden"
-                    onChange={(e) => handleFileChange(card.title, e.target.files)}
+                    onChange={(e) =>
+                      handleFileChange(card.title, e.target.files)
+                    }
                   />
                 </div>
               );
@@ -953,6 +984,37 @@ export default function DocumentUploadPage() {
           </div>
 
           {/* Uploaded Documents Section */}
+          {reviewedDocuments.length > 0 && (
+            <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <h3 className="text-sm font-semibold text-amber-900">
+                Counselor Feedback
+              </h3>
+              <p className="text-xs text-amber-800 mt-1 mb-3">
+                Please review these documents and re-upload where required.
+              </p>
+              <div className="space-y-2">
+                {reviewedDocuments.map((doc) => (
+                  <div
+                    key={`feedback-${doc.id}`}
+                    className="rounded-lg border border-amber-200 bg-white p-3"
+                  >
+                    <p className="text-sm font-medium text-gray-900">
+                      {doc.fileName}
+                    </p>
+                    <p className="text-xs text-amber-800 mt-1">
+                      Status: {doc.verificationStatus}
+                    </p>
+                    {doc.reviewNote && (
+                      <p className="text-xs text-gray-700 mt-1">
+                        Note: {doc.reviewNote}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <UploadedDocumentsSection
             documents={formattedDocuments}
             onView={(id) => {

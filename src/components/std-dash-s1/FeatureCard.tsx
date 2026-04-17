@@ -149,7 +149,7 @@ export default function FeatureCard({
   iconColor = featureCardData.defaultIconColor,
   title = featureCardData.sampleFeature.title,
   description = featureCardData.sampleFeature.description,
-  progress = featureCardData.sampleFeature.progress,
+  progress,
   progressColor = featureCardData.defaultProgressColor,
   statusIcon: StatusIcon = featureCardData.sampleFeature.statusIcon,
   statusIconColor = featureCardData.defaultStatusIconColor,

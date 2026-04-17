@@ -4,11 +4,7 @@ import React, { useState, useEffect } from "react";
 import Header from "@/components/std-dash-s1/Header";
 import Sidebar from "@/components/Sidebar";
 
-export default function SopLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function SopLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false); // mobile
   const [sidebarExpanded, setSidebarExpanded] = useState(true); // desktop
 
@@ -32,12 +28,7 @@ export default function SopLayout({
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <Header
-        onToggleSidebar={handleToggleSidebar}
-        userName="Muneeb Adil"
-        userRole="Student"
-        notificationCount={3}
-      />
+      <Header onToggleSidebar={handleToggleSidebar} />
 
       <div className="flex flex-1">
         {/* Sidebar */}

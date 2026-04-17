@@ -80,7 +80,7 @@
 //               <div className="flex items-start gap-3">
 //                 {/* Dot Indicator */}
 //                 <div className={`${styles.dotColor} w-2 h-2 rounded-full mt-2 flex-shrink-0`} />
-                
+
 //                 {/* Content */}
 //                 <div className="flex-1">
 //                   <p className="text-sm text-gray-800 font-medium">
@@ -101,14 +101,20 @@
 "use client";
 
 import React from "react";
-import { defaultUpdates, updateTypeStyles, Update } from "@/data/std-dash-s1-data/recentUpdatesData";
+import {
+  defaultUpdates,
+  updateTypeStyles,
+  Update,
+} from "@/data/std-dash-s1-data/recentUpdatesData";
 
 type RecentUpdatesProps = {
   updates?: Update[];
+  loading?: boolean;
 };
 
 export default function RecentUpdates({
   updates = defaultUpdates,
+  loading = false,
 }: RecentUpdatesProps) {
   const getTypeStyles = (type: Update["type"]) => updateTypeStyles[type];
 
@@ -124,30 +130,47 @@ export default function RecentUpdates({
 
       {/* Updates List */}
       <div className="space-y-3">
-        {updates.map((update) => {
-          const styles = getTypeStyles(update.type);
-          return (
-            <div
-              key={update.id}
-              className={`${styles.bgColor} rounded-lg p-4 hover:shadow-sm transition-all duration-200 cursor-pointer`}
-            >
-              <div className="flex items-start gap-3">
-                {/* Dot Indicator */}
-                <div
-                  className={`${styles.dotColor} w-2 h-2 rounded-full mt-2 flex-shrink-0`}
-                />
+        {loading && (
+          <div className="bg-blue-50 rounded-lg p-4">
+            <p className="text-sm text-gray-700 font-medium">
+              Loading recent updates...
+            </p>
+          </div>
+        )}
 
-                {/* Content */}
-                <div className="flex-1">
-                  <p className="text-sm text-gray-800 font-medium">
-                    {update.message}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">{update.time}</p>
+        {!loading && updates.length === 0 && (
+          <div className="bg-gray-50 rounded-lg p-4">
+            <p className="text-sm text-gray-700 font-medium">
+              No recent updates yet.
+            </p>
+          </div>
+        )}
+
+        {!loading &&
+          updates.map((update) => {
+            const styles = getTypeStyles(update.type);
+            return (
+              <div
+                key={update.id}
+                className={`${styles.bgColor} rounded-lg p-4 hover:shadow-sm transition-all duration-200 cursor-pointer`}
+              >
+                <div className="flex items-start gap-3">
+                  {/* Dot Indicator */}
+                  <div
+                    className={`${styles.dotColor} w-2 h-2 rounded-full mt-2 flex-shrink-0`}
+                  />
+
+                  {/* Content */}
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-800 font-medium">
+                      {update.message}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">{update.time}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import {
   FileText,
   MessageCircle,
   TrendingUp,
+  Handshake,
   X,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -31,6 +32,7 @@ const menuItems = [
   { icon: FileText, label: "AI SOP Writer", path: "/ai-sop-writer" },
   { icon: MessageCircle, label: "AI Chatbot", path: "/ai-chatbot" },
   { icon: TrendingUp, label: "Progress Tracker", path: "/progress-tracker" },
+  { icon: Handshake, label: "Connect With Us", path: "/connect-with-us" },
 ];
 
 export default function Sidebar({ isOpen, isExpanded, onClose }: SidebarProps) {
@@ -126,4 +128,3 @@ export default function Sidebar({ isOpen, isExpanded, onClose }: SidebarProps) {
     </>
   );
 }
-

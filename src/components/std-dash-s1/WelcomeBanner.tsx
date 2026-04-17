@@ -52,13 +52,15 @@ import { useAuth } from "@/context/AuthContext";
 export default function WelcomeBanner() {
   const { user } = useAuth(); // Get user from AuthContext
   const [overallProgress, setOverallProgress] = useState<number>(
-    welcomeBannerData.defaultProgress
+    welcomeBannerData.defaultProgress,
   );
 
   // Get user name from context (preferred) or fallback to localStorage
-  const userName = user?.fullName || 
-                   localStorage.getItem("userName") || 
-                   welcomeBannerData.defaultUserName;
+  const storedUserName =
+    typeof window !== "undefined" ? localStorage.getItem("userName") : null;
+
+  const userName =
+    user?.fullName || storedUserName || welcomeBannerData.defaultUserName;
 
   // You can optionally sync the user name to localStorage for backward compatibility
   useEffect(() => {

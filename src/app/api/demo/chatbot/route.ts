@@ -11,6 +11,37 @@ type KnowledgeEntry = {
   content: string;
 };
 
+const DOMAIN_KEYWORDS = new Set([
+  "admission",
+  "admissions",
+  "university",
+  "universities",
+  "program",
+  "course",
+  "degree",
+  "scholarship",
+  "visa",
+  "ielts",
+  "toefl",
+  "gre",
+  "gmat",
+  "gpa",
+  "sop",
+  "statement",
+  "purpose",
+  "document",
+  "application",
+  "deadline",
+  "recommendation",
+  "profile",
+  "study",
+  "abroad",
+  "intake",
+  "tuition",
+  "counselor",
+  "dashboard",
+]);
+
 function tokenize(text: string): string[] {
   return text
     .toLowerCase()
@@ -24,7 +55,7 @@ function rankEntries(query: string, entries: KnowledgeEntry[], maxResults = 5) {
   const queryTokenSet = new Set(queryTokens);
 
   if (queryTokenSet.size === 0) {
-    return [];
+    return [] as Array<{ entry: KnowledgeEntry; score: number }>;
   }
 
   return entries
@@ -49,8 +80,30 @@ function rankEntries(query: string, entries: KnowledgeEntry[], maxResults = 5) {
     })
     .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, maxResults)
-    .map((item) => item.entry);
+    .slice(0, maxResults);
+}
+
+function isDomainQuestion(message: string): boolean {
+  const tokens = tokenize(message);
+  return tokens.some((token) => DOMAIN_KEYWORDS.has(token));
+}
+
+function toTwoLineAnswer(text: string): string {
+  const normalized = String(text || "")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (normalized.length >= 2) {
+    return `${normalized[0]}\n${normalized[1]}`;
+  }
+
+  if (normalized.length === 1) {
+    return `${normalized[0]}\nI can also help with admissions, SOP, documents, scholarships, and university recommendations.`;
+  }
+
+  return "Here is a quick general response for your question.\nI can also help with admissions, SOP, documents, scholarships, and university recommendations.";
 }
 
 export async function POST(req: NextRequest) {
@@ -76,7 +129,12 @@ export async function POST(req: NextRequest) {
     const entries = Array.isArray(knowledge.entries)
       ? (knowledge.entries as KnowledgeEntry[])
       : [];
-    const matchedEntries = rankEntries(message, entries, 5);
+    const rankedEntries = rankEntries(message, entries, 5);
+    const matchedEntries = rankedEntries.map((item) => item.entry);
+    const topScore = rankedEntries[0]?.score ?? 0;
+    const hasStrongContext = matchedEntries.length > 0 && topScore >= 2;
+    const domainQuestion = isDomainQuestion(message);
+    const isIrrelevant = !domainQuestion && !hasStrongContext;
 
     const context = matchedEntries
       .map(
@@ -86,11 +144,16 @@ export async function POST(req: NextRequest) {
       .join("\n\n---\n\n");
 
     const prompt = [
-      "Answer ONLY from the context below.",
-      "If context is insufficient, reply exactly: Currently i do not have enough information to answer this question",
-      "Do not guess and do not use external knowledge.",
-      "Keep the answer concise and student-friendly.",
+      "You are a student study-advisor assistant.",
+      "Primary rule: use Context first when it is relevant.",
+      "If Context is weak or missing, still answer using your general knowledge in a practical, student-friendly way.",
+      "Never say you cannot answer unless the prompt is unsafe or empty.",
+      isIrrelevant
+        ? "This question seems outside study-advisor scope. Respond in exactly 2 short lines: line 1 gives a helpful direct answer, line 2 briefly redirects to study-advisor help."
+        : "For in-scope questions, provide a concise helpful answer and include actionable next steps when useful.",
+      "If you use assumptions, keep them minimal and explicit.",
       "",
+      `Context strength: ${hasStrongContext ? "strong" : "weak"}`,
       `Context:\n${context || "(empty)"}`,
       "",
       `User question:\n${message}`,
@@ -99,10 +162,16 @@ export async function POST(req: NextRequest) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(prompt);
-    const answer = result.response.text().trim();
+    const rawAnswer = result.response.text().trim();
+
+    const fallbackForEmpty = isIrrelevant
+      ? "I can still help with a quick general response to that question.\nIf you want, ask me about admissions, SOP, documents, scholarships, or university recommendations."
+      : "Based on general guidance, you can proceed step by step and verify details with official university pages. If you share your target country/program, I can give a more specific answer.";
+
+    const finalAnswer = rawAnswer || fallbackForEmpty;
 
     return NextResponse.json({
-      answer: answer || "Mujhe iska jawab nahi pata.",
+      answer: isIrrelevant ? toTwoLineAnswer(finalAnswer) : finalAnswer,
     });
   } catch (error) {
     const message =

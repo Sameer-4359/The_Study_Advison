@@ -198,6 +198,107 @@ export const documentApi = {
   },
 };
 
+export interface CompanyContactInfo {
+  companyName: string;
+  supportEmail: string;
+  supportPhone: string;
+  whatsappNumber: string;
+  address: string;
+  officeHours: string;
+  website: string;
+}
+
+export interface AssignedCounselorInfo {
+  assignmentId: number;
+  assignedAt: string;
+  notes: string | null;
+  counselor: {
+    id: number;
+    fullName: string;
+    email: string;
+    phone: string | null;
+    skills: string[];
+    isActive: boolean;
+  };
+}
+
+export interface StudentConnectionInfoResponse {
+  status: string;
+  company: CompanyContactInfo;
+  hasAssignedCounselor: boolean;
+  assignedCounselor: AssignedCounselorInfo | null;
+  hasPendingConnectionRequest: boolean;
+  lastConnectionRequestedAt: string | null;
+}
+
+export interface MeetingRequestPayload {
+  note?: string;
+  preferredDateTime?: string | null;
+}
+
+export const connectionApi = {
+  async getConnectionInfo(
+    token: string,
+  ): Promise<StudentConnectionInfoResponse> {
+    const response = await fetch(`${API_BASE_URL}/student/connection`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const error: ApiError = await response.json();
+      throw new Error(error.message || "Failed to fetch connection info");
+    }
+
+    return await response.json();
+  },
+
+  async requestConnection(token: string) {
+    const response = await fetch(`${API_BASE_URL}/student/connection/request`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to request connection");
+    }
+
+    return data;
+  },
+
+  async requestMeetingWithCounselor(
+    token: string,
+    payload: MeetingRequestPayload,
+  ) {
+    const response = await fetch(
+      `${API_BASE_URL}/student/connection/meeting-request`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to request meeting");
+    }
+
+    return data;
+  },
+};
+
 //for profile management
 export interface UserProfileData {
   // Personal Information

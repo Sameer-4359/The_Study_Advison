@@ -32,12 +32,7 @@ export default function ChatbotLayout({
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <Header
-        onToggleSidebar={handleToggleSidebar}
-        userName="Muneeb Adil"
-        userRole="Student"
-        notificationCount={3}
-      />
+      <Header onToggleSidebar={handleToggleSidebar} />
 
       <div className="flex flex-1">
         {/* Sidebar */}

@@ -18,6 +18,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "The Study Advisor",
   description: "Your only solution for study abroad.",
+  icons: {
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
+  },
 };
 
 export default function RootLayout({
@@ -27,8 +32,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
         {/* ⭐ Global Auth Provider */}
         <AuthProvider>
           {/* Render App */}
@@ -37,7 +43,6 @@ export default function RootLayout({
 
         {/* ⭐ Global Toaster (Notifications) */}
         <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
-
       </body>
     </html>
   );

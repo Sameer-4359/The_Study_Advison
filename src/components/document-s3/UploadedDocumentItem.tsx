@@ -126,8 +126,6 @@
 // }
 //after data
 
-
-
 "use client";
 
 import React from "react";
@@ -140,7 +138,12 @@ import {
   Trash2,
 } from "lucide-react";
 
-export type DocumentStatus = "verified" | "under-review" | "pending";
+export type DocumentStatus =
+  | "verified"
+  | "under-review"
+  | "pending"
+  | "reupload-requested"
+  | "rejected";
 
 export type UploadedDocumentItemProps = {
   fileName: string;
@@ -154,7 +157,7 @@ export type UploadedDocumentItemProps = {
 
 const statusConfig = {
   verified: {
-    label: "AI Verified",
+    label: "Approved",
     bgColor: "bg-green-50",
     textColor: "text-green-700",
     icon: CheckCircle2,
@@ -173,6 +176,20 @@ const statusConfig = {
     textColor: "text-gray-700",
     icon: AlertCircle,
     iconColor: "text-gray-600",
+  },
+  "reupload-requested": {
+    label: "Reupload Requested",
+    bgColor: "bg-amber-50",
+    textColor: "text-amber-700",
+    icon: AlertCircle,
+    iconColor: "text-amber-600",
+  },
+  rejected: {
+    label: "Rejected",
+    bgColor: "bg-red-50",
+    textColor: "text-red-700",
+    icon: AlertCircle,
+    iconColor: "text-red-600",
   },
 };
 
@@ -200,11 +217,11 @@ export default function UploadedDocumentItem({
             <h4 className="text-sm font-semibold text-gray-900 truncate">
               {fileName}
             </h4>
-            <StatusIcon className={`w-4 h-4 flex-shrink-0 ${config.iconColor}`} />
+            <StatusIcon
+              className={`w-4 h-4 flex-shrink-0 ${config.iconColor}`}
+            />
           </div>
-          <p className="text-xs text-gray-600">
-            Uploaded: {uploadDate}
-          </p>
+          <p className="text-xs text-gray-600">Uploaded: {uploadDate}</p>
         </div>
       </div>
 
