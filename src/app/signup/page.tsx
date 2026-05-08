@@ -1,15 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { GraduationCap } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
 import toast from "react-hot-toast";
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signup } = useAuth();
   const [role, setRole] = useState<string>("student");
 
   const [fullName, setFullName] = useState("");
@@ -43,60 +41,56 @@ export default function SignupPage() {
     try {
       setSubmitting(true);
 
-      const res = await fetch(`${API_BASE_URL}/auth/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, email, password, role }),
-      });
+      const pendingSignup = {
+        fullName,
+        email,
+        password,
+        role: "student",
+      };
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        toast.error(data.message || "Account creation failed.");
-        setSubmitting(false);
-        return;
-      }
-
-      // ⭐ Context handles saving token + user + redirect
-      signup(data.token, data.user);
-
-      toast.success("Account created successfully!");
+      localStorage.setItem("pendingSignup", JSON.stringify(pendingSignup));
+      router.push("/payment?flow=signup");
     } catch (err) {
-      toast.error("Unable to reach server. Try again later.");
+      toast.error("Unable to continue. Try again later.");
     } finally {
       setSubmitting(false);
     }
   };
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F8FAFF] to-[#EEF2FF] px-4 py-10">
-      <div className="w-full max-w-[720px] mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 md:p-12">
-          {/* Header */}
-          <div className="flex flex-col items-center text-center">
-            <div
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mb-4 sm:mb-6"
-              style={{ backgroundColor: "#4F46E5" }}
-            >
-              <GraduationCap color="#fff" className="w-8 h-8 sm:w-10 sm:h-10" />
-            </div>
-
-            <h1
-              className="font-semibold mb-2 text-[22px] sm:text-[28px] md:text-[32px] leading-tight"
-              style={{ color: "#4169E1" }}
-            >
-              Sign Up as {roleLabel}
-            </h1>
-
-            <p className="text-sm sm:text-[16px] text-[#6B7280] mb-6 sm:mb-8">
-              Create your {roleLabel} account to begin your journey
-            </p>
+    <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+      <section className="relative hidden lg:flex items-center justify-center bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-10 left-10 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl"></div>
+          <div className="absolute bottom-10 right-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl"></div>
+        </div>
+        <div className="relative z-10 max-w-md text-center px-8">
+          <h1 className="text-4xl font-extrabold">Join the Journey</h1>
+          <p className="mt-4 text-indigo-100">
+            Create a student account and unlock personalized university
+            recommendations and smart guidance.
+          </p>
+          <div className="mt-8 text-sm text-indigo-100">
+            Already have an account?{" "}
+            <Link href="/login" className="text-white underline">
+              Sign in
+            </Link>
           </div>
+        </div>
+      </section>
 
-          {/* Form */}
-          <form onSubmit={handleSignup} className="mt-4 sm:mt-6">
+      <section className="flex items-center justify-center px-6 py-12 bg-white">
+        <div className="w-full max-w-lg">
+          <h2 className="text-3xl font-bold text-gray-900">
+            Sign Up as {roleLabel}
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Create your student account to begin your journey.
+          </p>
+
+          <form onSubmit={handleSignup} className="mt-8 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-black font-semibold text-sm mb-2">
+                <label className="block text-sm font-medium text-gray-700">
                   Full Name
                 </label>
                 <input
@@ -104,13 +98,13 @@ export default function SignupPage() {
                   placeholder="Your full name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-[#F3F4F6] rounded-lg px-3 py-2 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                  className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-black font-semibold text-sm mb-2">
+                <label className="block text-sm font-medium text-gray-700">
                   Email Address
                 </label>
                 <input
@@ -118,13 +112,13 @@ export default function SignupPage() {
                   placeholder="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#F3F4F6] rounded-lg px-3 py-2 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                  className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-black font-semibold text-sm mb-2">
+                <label className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
                 <input
@@ -132,13 +126,13 @@ export default function SignupPage() {
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#F3F4F6] rounded-lg px-3 py-2 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                  className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-black font-semibold text-sm mb-2">
+                <label className="block text-sm font-medium text-gray-700">
                   Confirm Password
                 </label>
                 <input
@@ -146,44 +140,38 @@ export default function SignupPage() {
                   placeholder="Confirm password"
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
-                  className="w-full bg-[#F3F4F6] rounded-lg px-3 py-2 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                  className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition"
                   required
                 />
               </div>
             </div>
 
-            {/* Error */}
-            {errorMsg && (
-              <p className="text-red-600 text-sm mt-3">{errorMsg}</p>
-            )}
+            {errorMsg && <p className="text-red-600 text-sm">{errorMsg}</p>}
 
-            <div className="mt-6">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full rounded-lg px-6 py-3 font-semibold text-white text-[16px] hover:opacity-90 transition"
-                style={{
-                  background:
-                    "linear-gradient(90deg, #818CF8 0%, #A78BFA 100%)",
-                }}
-              >
-                {submitting ? "Creating account..." : "Create Account"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full rounded-lg px-6 py-3 font-semibold text-white text-[16px] hover:opacity-90 transition"
+              style={{
+                background: "linear-gradient(90deg, #818CF8 0%, #A78BFA 100%)",
+              }}
+            >
+              {submitting ? "Creating account..." : "Create Account"}
+            </button>
 
-            <p className="text-center text-sm text-[#6B7280] mt-5">
+            <p className="text-center text-sm text-gray-600">
               Already have an account?{" "}
               <button
                 type="button"
                 onClick={() => router.push("/login")}
-                className="text-[#4F46E5] font-semibold hover:underline"
+                className="text-indigo-600 font-semibold hover:underline"
               >
                 Login
               </button>
             </p>
           </form>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
