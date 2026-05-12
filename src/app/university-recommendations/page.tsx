@@ -508,14 +508,6 @@ export default function UniversityRecommendationsPage() {
     }
   };
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (activeTab === "browse") {
-      // Implement search logic for browse mode
-      console.log("Searching universities for:", query);
-    }
-  };
-
   const handleFilterClick = () => {
     console.log("Show filters");
     // You can implement a filter modal here
@@ -696,7 +688,8 @@ export default function UniversityRecommendationsPage() {
         {/* Search and Filters - Only show when we have universities to filter */}
         {(hasRecommendations || activeTab === "browse") && (
           <SearchFilterBar
-            onSearch={handleSearch}
+            query={searchQuery}
+            onQueryChange={setSearchQuery}
             onFilterClick={handleFilterClick}
           />
         )}
@@ -726,7 +719,7 @@ export default function UniversityRecommendationsPage() {
         {activeTab === "recommended" && hasRecommendations && (
           <>
             <SectionHeader
-              title={`Recommended Universities (${recommendations?.recommendations.length})`}
+              title={`Recommended Universities (${filteredUniversities.length})`}
               action={
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-600">
@@ -737,7 +730,7 @@ export default function UniversityRecommendationsPage() {
               }
             />
 
-            {recommendedUniversities.map((uni, index) => (
+            {filteredUniversities.map((uni, index) => (
               <div key={uni.id} className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-800 rounded">

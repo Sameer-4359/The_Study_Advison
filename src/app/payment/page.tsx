@@ -1,6 +1,6 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
@@ -60,26 +60,43 @@ export default function PaymentPage() {
 
   const flow = searchParams.get("flow") || "";
 
-  const pendingSignup = useMemo(() => {
-    if (typeof window === "undefined") return null;
-    const raw = localStorage.getItem("pendingSignup");
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw);
-    } catch (err) {
-      return null;
-    }
-  }, []);
+  const [pendingSignup, setPendingSignup] = useState<{
+    fullName: string;
+    email: string;
+    password: string;
+    role: string;
+  } | null>(null);
 
   useEffect(() => {
-    const paid = String(document.cookie).includes("paymentStatus=paid");
-    if (paid) router.push("/student/dashboard");
+    if (typeof window === "undefined") return;
 
-    if (flow === "signup" && !pendingSignup) {
+    let parsed: {
+      fullName: string;
+      email: string;
+      password: string;
+      role: string;
+    } | null = null;
+    const raw = localStorage.getItem("pendingSignup");
+    if (raw) {
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        parsed = null;
+      }
+    }
+    setPendingSignup(parsed);
+
+    const paid = String(document.cookie).includes("paymentStatus=paid");
+    if (paid) {
+      router.push("/student/dashboard");
+      return;
+    }
+
+    if (flow === "signup" && !parsed) {
       toast.error("Please complete signup first.");
       router.push("/signup");
     }
-  }, [router, flow, pendingSignup]);
+  }, [flow, router]);
 
   const handlePayment = async () => {
     if (!cardName.trim()) {
