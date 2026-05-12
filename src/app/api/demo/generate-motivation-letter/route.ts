@@ -1,5 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
+import { getGeminiApiKey } from "@/lib/serverConfig";
+import {
+  buildSopReferenceContext,
+  inferSopField,
+} from "@/lib/sopReferenceSamples";
 
 export const runtime = "nodejs";
 
@@ -23,6 +28,7 @@ function sanitizeInput(value: unknown): string {
 function buildSystemPrompt(tone: Tone): string {
   return [
     "You are a senior graduate admissions writing consultant.",
+    "Before drafting, first read the SOP reference samples and identify writing cues for the student's field.",
     "Write one complete SOP/motivation letter that sounds human, specific, and realistic.",
     "Do not output markdown, headings, bullet points, JSON, analysis notes, or placeholders.",
     "Never mention AI, model, prompt, or that data is missing.",
@@ -62,6 +68,13 @@ export async function POST(req: NextRequest) {
     }
 
     const systemPrompt = buildSystemPrompt(resolvedTone);
+    const inferredField = inferSopField({
+      program: sanitizeInput(body.program),
+      courseDetails: sanitizeInput(body.courseDetails),
+      achievements: sanitizeInput(body.achievements),
+      futureGoals: sanitizeInput(body.futureGoals),
+    });
+    const referenceContext = buildSopReferenceContext(inferredField);
 
     const userPrompt = `Please write a motivation letter for:
 
@@ -104,11 +117,10 @@ Rules:
 - Keep tone aligned with Preferred Tone and remain internally consistent.
 - Output only the final letter text in this format.`;
 
-    // Prefer GEMINI_API_KEY, but also support LOVABLE_API_KEY since you stored the Gemini key there.
-    const apiKey = process.env.GEMINI_API_KEY || process.env.LOVABLE_API_KEY;
+    const apiKey = getGeminiApiKey();
     if (!apiKey) {
       return NextResponse.json(
-        { error: "Missing GEMINI_API_KEY or LOVABLE_API_KEY" },
+        { error: "Missing GEMINI_API_KEY" },
         { status: 500 },
       );
     }
@@ -116,7 +128,7 @@ Rules:
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const prompt = `${systemPrompt}\n\n${userPrompt}\n\n${requiredTemplate}`;
+    const prompt = `${systemPrompt}\n\nInferred student field: ${inferredField}\n\n${referenceContext}\n\n${userPrompt}\n\n${requiredTemplate}`;
     const result = await model.generateContent(prompt);
     const generatedText = result.response.text();
 

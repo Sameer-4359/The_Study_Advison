@@ -1,33 +1,52 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
+import { getGeminiApiKey } from "@/lib/serverConfig";
+import {
+  buildSopReferenceContext,
+  inferSopField,
+} from "@/lib/sopReferenceSamples";
+
+function sanitizeInput(value: unknown): string {
+  return String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
     const systemPrompt =
-      "You are an expert admissions consultant. Write a natural, human-sounding motivation letter. Follow the required structure exactly. Do not add markdown, bullets, headings, links, notes, or promotional lines. Do not mention AI. Keep language realistic and specific.";
+      "You are an expert admissions consultant. First read the provided SOP reference samples, then write a natural, human-sounding motivation letter aligned to the student's field. Follow the required structure exactly. Do not add markdown, bullets, headings, links, notes, or promotional lines. Do not mention AI. Keep language realistic and specific. Never copy sample lines verbatim.";
+
+    const inferredField = inferSopField({
+      program: sanitizeInput(body.program),
+      courseDetails: sanitizeInput(body.courseDetails),
+      achievements: sanitizeInput(body.achievements),
+      futureGoals: sanitizeInput(body.futureGoals),
+    });
+    const referenceContext = buildSopReferenceContext(inferredField);
 
     let userPrompt = `Please write a motivation letter for:
 
-Student Name: ${body.name}
-Target Country: ${body.country}
-University: ${body.university}
-Program: ${body.program}
-Preferred Tone: ${body.tone}
+Student Name: ${sanitizeInput(body.name)}
+Target Country: ${sanitizeInput(body.country)}
+University: ${sanitizeInput(body.university)}
+Program: ${sanitizeInput(body.program)}
+Preferred Tone: ${sanitizeInput(body.tone)}
 
 Why This University:
-${body.whyUniversity || "Not specified"}
+${sanitizeInput(body.whyUniversity) || "Not specified"}
 
-${body.courseDetails ? `Courses:\n${body.courseDetails}` : ""}
+${sanitizeInput(body.courseDetails) ? `Courses:\n${sanitizeInput(body.courseDetails)}` : ""}
 
 Achievements:
-${body.achievements}
+${sanitizeInput(body.achievements)}
 
 Future Goals:
-${body.futureGoals}
+${sanitizeInput(body.futureGoals)}
 
-${body.resumeText ? `Resume:\n${body.resumeText.substring(0, 2000)}` : ""}
+${sanitizeInput(body.resumeText) ? `Resume:\n${sanitizeInput(body.resumeText).substring(0, 4000)}` : ""}
 `;
 
     const requiredTemplate = `Use this exact output format and paragraph order:
@@ -49,7 +68,7 @@ Rules:
 - Keep tone aligned with Preferred Tone.
 - Output only the final letter text in this format.`;
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = getGeminiApiKey();
     if (!apiKey) {
       return NextResponse.json(
         { error: "Missing GEMINI_API_KEY" },
@@ -58,9 +77,9 @@ Rules:
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const prompt = `${systemPrompt}\n\n${userPrompt}\n\n${requiredTemplate}`;
+    const prompt = `${systemPrompt}\n\nInferred student field: ${inferredField}\n\n${referenceContext}\n\n${userPrompt}\n\n${requiredTemplate}`;
     const result = await model.generateContent(prompt);
     const generatedText = result.response.text();
 

@@ -2,16 +2,13 @@
 "use client";
 
 import React from "react";
+import type { ProgressMilestone } from "@/lib/progress-tracker";
 
-export default function Milestones() {
-  const items = [
-    { label: "Profile Created", date: "2024-01-15", status: "done" },
-    { label: "Documents Uploaded", date: "", status: "in-progress" },
-    { label: "Universities Shortlisted", date: "", status: "pending" },
-    { label: "SOP Completed", date: "", status: "pending" },
-    { label: "Application Ready", date: "", status: "pending" },
-  ];
+type Props = {
+  items: ProgressMilestone[];
+};
 
+export default function Milestones({ items }: Props) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-4">
       <h4 className="text-sm font-semibold text-gray-900 mb-3">Milestones</h4>

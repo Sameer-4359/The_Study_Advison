@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 import knowledge from "@/data/chatbot-knowledge.json";
+import { getGeminiApiKey } from "@/lib/serverConfig";
 
 export const runtime = "nodejs";
 
@@ -118,10 +119,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.LOVABLE_API_KEY;
+    const apiKey = getGeminiApiKey();
     if (!apiKey) {
       return NextResponse.json(
-        { error: "Missing GEMINI_API_KEY or LOVABLE_API_KEY" },
+        { error: "Missing GEMINI_API_KEY" },
         { status: 500 },
       );
     }

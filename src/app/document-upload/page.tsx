@@ -118,7 +118,7 @@
 
 //       const toastId = toast.loading("Uploading...");
 
-//       const res = await fetch("http://localhost:4000/api/documents/upload", {
+//       const res = await fetch(`${API_BASE_URL}/documents/upload`, {
 //         method: "POST",
 //         headers: {
 //           Authorization: `Bearer ${token}`,

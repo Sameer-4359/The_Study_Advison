@@ -1,4 +1,5 @@
 // src/lib/api.ts
+import { API_BASE_URL } from "@/lib/apiConfig";
 import {
   DocumentType,
   DisplayDocumentType,
@@ -8,8 +9,6 @@ import {
   GetDocumentsResponse,
 } from "@/lib/types/document";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 interface ApiError {
   status: string;
@@ -608,34 +607,9 @@ export interface UniversityListResponse {
   updated_at: string | null;
 }
 
-// Recommendation/university APIs now live in the Node backend.
-const RECOMMENDATION_API_BASE_URL =
-  process.env.NEXT_PUBLIC_RECOMMENDATION_API_URL || API_BASE_URL;
-
-function normalizeBaseUrl(value: string): string {
-  return value.replace(/\/+$/, "");
-}
-
+// Recommendation/university APIs use the same backend as the rest of the app.
 function getRecommendationApiBases(): string[] {
-  const rawBases = [
-    RECOMMENDATION_API_BASE_URL,
-    API_BASE_URL,
-    process.env.NEXT_PUBLIC_PYTHON_API_URL,
-  ].filter((value): value is string => Boolean(value && value.trim()));
-
-  const bases = new Set<string>();
-
-  for (const base of rawBases) {
-    const normalized = normalizeBaseUrl(base);
-    bases.add(normalized);
-
-    // Local dev safety-net: if 4000 points to a stale instance, try 4010.
-    if (/localhost:4000|127\.0\.0\.1:4000/i.test(normalized)) {
-      bases.add(normalized.replace(/:4000/i, ":4010"));
-    }
-  }
-
-  return Array.from(bases);
+  return [API_BASE_URL];
 }
 
 async function parseApiError(

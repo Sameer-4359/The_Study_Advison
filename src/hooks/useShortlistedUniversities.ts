@@ -4,6 +4,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
+import { API_BASE_URL } from "@/lib/apiConfig";
 
 export interface ShortlistedUniversity {
   universityId: string;
@@ -16,8 +17,6 @@ export interface ShortlistedUniversity {
 }
 
 const STORAGE_KEY = "shortlistedUniversities";
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 const SHORTLIST_UPDATED_EVENT = "shortlist-updated";
 
@@ -252,27 +251,58 @@ export function useShortlistedUniversities() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/student/inform-counselor`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          studentId: user.id,
-          shortlistedUniversities: shortlisted.map((uni) =>
-            parseInt(uni.universityId),
-          ),
-        }),
-      });
+      const payload = {
+        studentId: user.id,
+        shortlistedUniversities: shortlisted.map((uni) =>
+          parseInt(uni.universityId),
+        ),
+      };
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      };
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to inform counselor");
+      const candidatePaths = [
+        "/student/inform-counselor",
+        "/student/shortlist/inform-counselor",
+        "/student/connection/inform-counselor",
+      ];
+
+      let lastErrorMessage = "Failed to inform counselor";
+
+      for (const path of candidatePaths) {
+        const response = await fetch(`${API_BASE_URL}${path}`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          toast.success("Your counselor has been informed!");
+          return true;
+        }
+
+        let errorMessage = "Failed to inform counselor";
+        try {
+          const error = await response.json();
+          errorMessage = error?.message || errorMessage;
+        } catch {
+          // ignore json parse failures and keep fallback message
+        }
+
+        // Try fallback endpoint only for route-not-found style errors.
+        if (
+          response.status === 404 ||
+          /endpoint not found/i.test(errorMessage)
+        ) {
+          lastErrorMessage = errorMessage;
+          continue;
+        }
+
+        throw new Error(errorMessage);
       }
 
-      toast.success("Your counselor has been informed!");
-      return true;
+      throw new Error(lastErrorMessage);
     } catch (err) {
       console.error("Failed to inform counselor:", err);
       const message =

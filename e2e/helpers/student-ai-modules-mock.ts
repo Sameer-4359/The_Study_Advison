@@ -1,18 +1,23 @@
 import type { Page, Route } from "@playwright/test";
 
+const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+const configuredApiBase = configuredApiBaseUrl
+  ? new URL(configuredApiBaseUrl)
+  : null;
+const configuredApiPath = configuredApiBase?.pathname.replace(/\/+$/, "") || "";
+
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-function isBackend4000(url: URL): boolean {
-  const h = url.hostname;
-  const p = url.port || (url.protocol === "https:" ? "443" : "80");
-  return (
-    (h === "localhost" || h === "127.0.0.1") &&
-    (p === "4000" || p === "4010")
-  );
+function isConfiguredBackend(url: URL): boolean {
+  return Boolean(configuredApiBase && url.origin === configuredApiBase.origin);
+}
+
+function isApiPath(url: URL, path: string): boolean {
+  return url.pathname === `${configuredApiPath}${path}`;
 }
 
 function baseUniversity(
@@ -116,8 +121,7 @@ async function fulfillJson(
 
 /**
  * Mocks:
- * - Recommendation service on port 4000/4010: POST /api/recommendations, GET /api/universities
- * - Main API: GET /api/student/sop (empty list for fast load)
+ * - Configured backend: POST /recommendations, GET /universities, GET /student/sop
  * - Next route: POST /api/demo/generate-motivation-letter (deterministic letter + optional delay)
  */
 export async function installStudentAiModuleMocks(
@@ -145,7 +149,7 @@ export async function installStudentAiModuleMocks(
       return;
     }
 
-    if (!isBackend4000(url)) {
+    if (!isConfiguredBackend(url)) {
       await route.continue();
       return;
     }
@@ -155,12 +159,12 @@ export async function installStudentAiModuleMocks(
       return;
     }
 
-    if (path === "/api/student/sop" && method === "GET") {
+    if (isApiPath(url, "/student/sop") && method === "GET") {
       await fulfillJson(route, { sops: [] });
       return;
     }
 
-    if (path === "/api/recommendations" && method === "POST") {
+    if (isApiPath(url, "/recommendations") && method === "POST") {
       const ms = options.recommendationDelayMs ?? 0;
       if (ms > 0) {
         await new Promise((r) => setTimeout(r, ms));
@@ -170,8 +174,8 @@ export async function installStudentAiModuleMocks(
     }
 
     if (
-      path === "/api/universities" ||
-      path.startsWith("/api/universities?")
+      isApiPath(url, "/universities") ||
+      path.startsWith(`${configuredApiPath}/universities?`)
     ) {
       if (method === "GET") {
         await fulfillJson(route, browseUniversitiesFixture);

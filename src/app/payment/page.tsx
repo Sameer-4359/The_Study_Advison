@@ -4,9 +4,7 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+import { API_BASE_URL } from "@/lib/apiConfig";
 
 const formatCardNumber = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 16);

@@ -206,6 +206,7 @@ import FormInput from "@/components/profile-s2/FormInput";
 import FormSelect from "@/components/profile-s2/FormSelect";
 import FormActions from "@/components/profile-s2/FormActions";
 import { useAuth } from "@/context/AuthContext";
+import { API_BASE_URL } from "@/lib/apiConfig";
 import { jsPDF } from "jspdf";
 
 type FormData = {
@@ -347,10 +348,7 @@ export default function AISopWriterPage() {
 
     try {
       setLoadingSopReview(true);
-      const baseUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
-
-      const listRes = await fetch(`${baseUrl}/student/sop`, {
+      const listRes = await fetch(`${API_BASE_URL}/student/sop`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -378,7 +376,7 @@ export default function AISopWriterPage() {
         return;
       }
 
-      const detailRes = await fetch(`${baseUrl}/student/sop/${latest.id}`, {
+      const detailRes = await fetch(`${API_BASE_URL}/student/sop/${latest.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -551,9 +549,7 @@ export default function AISopWriterPage() {
       body.append("content", generatedLetter);
       body.append("submit", submit ? "true" : "false");
 
-      const baseUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
-      const response = await fetch(`${baseUrl}/student/sop/save-pdf-version`, {
+      const response = await fetch(`${API_BASE_URL}/student/sop/save-pdf-version`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

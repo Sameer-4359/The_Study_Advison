@@ -1,5 +1,11 @@
 import type { Page, Route } from "@playwright/test";
 
+const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+const configuredApiBase = configuredApiBaseUrl
+  ? new URL(configuredApiBaseUrl)
+  : null;
+const configuredApiPath = configuredApiBase?.pathname.replace(/\/+$/, "") || "";
+
 const completionPayload = {
   status: "success",
   completionPercentage: 40,
@@ -36,11 +42,11 @@ const programsBachelorsPayload = {
 };
 
 function isApiHost(url: URL): boolean {
-  const port = url.port || (url.protocol === "https:" ? "443" : "80");
-  return (
-    (url.hostname === "localhost" || url.hostname === "127.0.0.1") &&
-    port === "4000"
-  );
+  return Boolean(configuredApiBase && url.origin === configuredApiBase.origin);
+}
+
+function isApiPath(url: URL, path: string): boolean {
+  return url.pathname === `${configuredApiPath}${path}`;
 }
 
 const corsHeaders = {
@@ -79,12 +85,7 @@ async function fulfillAuthLogin(route: Route) {
 export async function mockAuthLoginSuccess(page: Page) {
   await page.route(/auth\/login/i, async (route) => {
     const url = new URL(route.request().url());
-    const okHost =
-      url.host === "localhost:4000" ||
-      url.host === "127.0.0.1:4000" ||
-      ((url.hostname === "localhost" || url.hostname === "127.0.0.1") &&
-        url.port === "4000");
-    if (!okHost || !/\/api\/auth\/login\/?$/.test(url.pathname)) {
+    if (!isApiHost(url) || !isApiPath(url, "/auth/login")) {
       await route.continue();
       return;
     }
@@ -103,7 +104,6 @@ export async function mockProfileApis(page: Page) {
       return;
     }
 
-    const path = url.pathname;
     const method = route.request().method();
 
     if (method === "OPTIONS") {
@@ -111,7 +111,7 @@ export async function mockProfileApis(page: Page) {
       return;
     }
 
-    if (path === "/api/profile/completion" && method === "GET") {
+    if (isApiPath(url, "/profile/completion") && method === "GET") {
       await route.fulfill({
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -120,7 +120,7 @@ export async function mockProfileApis(page: Page) {
       return;
     }
 
-    if (path === "/api/profile/countries" && method === "GET") {
+    if (isApiPath(url, "/profile/countries") && method === "GET") {
       await route.fulfill({
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -129,7 +129,7 @@ export async function mockProfileApis(page: Page) {
       return;
     }
 
-    if (path === "/api/profile/education-levels" && method === "GET") {
+    if (isApiPath(url, "/profile/education-levels") && method === "GET") {
       await route.fulfill({
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -138,7 +138,7 @@ export async function mockProfileApis(page: Page) {
       return;
     }
 
-    if (path === "/api/profile/programs" && method === "GET") {
+    if (isApiPath(url, "/profile/programs") && method === "GET") {
       await route.fulfill({
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -147,7 +147,7 @@ export async function mockProfileApis(page: Page) {
       return;
     }
 
-    if (path === "/api/profile" && method === "GET") {
+    if (isApiPath(url, "/profile") && method === "GET") {
       await route.fulfill({
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -160,7 +160,7 @@ export async function mockProfileApis(page: Page) {
       return;
     }
 
-    if (path === "/api/profile" && method === "PUT") {
+    if (isApiPath(url, "/profile") && method === "PUT") {
       const body = route.request().postDataJSON() as Record<string, unknown>;
       storedProfile = {
         id: 1,

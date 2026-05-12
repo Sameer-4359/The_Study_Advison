@@ -5,8 +5,9 @@ import { documentApi, profileApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Update } from "@/data/std-dash-s1-data/recentUpdatesData";
 import { BackendDocument } from "@/lib/types/document";
+import { API_BASE_URL } from "@/lib/apiConfig";
 
-type SopStatus =
+export type SopStatus =
   | "NOT_STARTED"
   | "DRAFT"
   | "SUBMITTED"
@@ -22,7 +23,7 @@ type SopRecord = {
   submittedAt?: string;
 };
 
-type DashboardMetrics = {
+export type DashboardMetrics = {
   profileCompletion: number;
   documentProgress: number;
   uploadedDocumentTypes: number;
@@ -38,6 +39,8 @@ type HookState = {
   updates: Update[];
   metrics: DashboardMetrics;
   notificationCount: number;
+  firstActivityAt?: string;
+  latestActivityAt?: string;
 };
 
 type CachedState = {
@@ -46,8 +49,6 @@ type CachedState = {
   state: HookState;
 };
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 let dashboardUpdatesCache: CachedState | null = null;
 
@@ -75,6 +76,8 @@ const defaultState: HookState = {
   ],
   metrics: defaultMetrics,
   notificationCount: 0,
+  firstActivityAt: undefined,
+  latestActivityAt: undefined,
 };
 
 function getRelativeTime(dateInput?: string): string {
@@ -108,6 +111,32 @@ function getLatestDocumentTimestamp(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
   return sorted[0]?.createdAt;
+}
+
+function getEarliestDocumentTimestamp(
+  documents: BackendDocument[],
+): string | undefined {
+  if (!documents.length) return undefined;
+  const sorted = [...documents].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  );
+  return sorted[0]?.createdAt;
+}
+
+function getEarliestTimestamp(values: Array<string | undefined>): string | undefined {
+  const valid = values
+    .map((value) => (value ? new Date(value).getTime() : NaN))
+    .filter((value) => !Number.isNaN(value));
+  if (!valid.length) return undefined;
+  return new Date(Math.min(...valid)).toISOString();
+}
+
+function getLatestTimestamp(values: Array<string | undefined>): string | undefined {
+  const valid = values
+    .map((value) => (value ? new Date(value).getTime() : NaN))
+    .filter((value) => !Number.isNaN(value));
+  if (!valid.length) return undefined;
+  return new Date(Math.max(...valid)).toISOString();
 }
 
 function getSopScore(status: SopStatus): number {
@@ -169,6 +198,8 @@ function buildDashboardState(params: {
   documents: BackendDocument[];
   sopStatus: SopStatus;
   sopUpdatedAt?: string;
+  earliestActivityAt?: string;
+  latestActivityAt?: string;
 }): HookState {
   const {
     profileCompletion,
@@ -177,6 +208,8 @@ function buildDashboardState(params: {
     documents,
     sopStatus,
     sopUpdatedAt,
+    earliestActivityAt,
+    latestActivityAt,
   } = params;
 
   const totalDocumentTypes = documentApi.getDisplayDocumentTypes().length;
@@ -294,6 +327,8 @@ function buildDashboardState(params: {
       nextActionLabel,
     },
     notificationCount: pendingActionCount,
+    firstActivityAt: earliestActivityAt,
+    latestActivityAt,
   };
 }
 
@@ -350,6 +385,9 @@ export function useStudentDashboardUpdates() {
           ? documentsResult.value.documents || []
           : [];
 
+      const earliestDocumentAt = getEarliestDocumentTimestamp(documents);
+      const latestDocumentAt = getLatestDocumentTimestamp(documents);
+
       let sopStatus: SopStatus = "NOT_STARTED";
       let sopUpdatedAt: string | undefined;
 
@@ -376,6 +414,16 @@ export function useStudentDashboardUpdates() {
         documents,
         sopStatus,
         sopUpdatedAt,
+        earliestActivityAt: getEarliestTimestamp([
+          profileUpdatedAt,
+          earliestDocumentAt,
+          sopUpdatedAt,
+        ]),
+        latestActivityAt: getLatestTimestamp([
+          profileUpdatedAt,
+          latestDocumentAt,
+          sopUpdatedAt,
+        ]),
       });
 
       dashboardUpdatesCache = {
@@ -408,6 +456,8 @@ export function useStudentDashboardUpdates() {
     updates: state.updates,
     metrics: state.metrics,
     notificationCount: state.notificationCount,
+    firstActivityAt: state.firstActivityAt,
+    latestActivityAt: state.latestActivityAt,
     loading,
     refresh: loadUpdates,
   };

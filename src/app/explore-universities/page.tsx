@@ -16,9 +16,7 @@ import {
   Loader2,
   CheckCircle2,
 } from "lucide-react";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+import { API_BASE_URL } from "@/lib/apiConfig";
 
 const PROGRAM_LEVELS = ["BACHELORS", "MASTERS", "PHD", "DIPLOMA", "MBA"];
 const COUNTRIES = ["USA", "Canada", "UK", "Australia", "Germany", "France"];

@@ -8,8 +8,7 @@ import UniversityLayout from "@/components/layouts/UniversityLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import UniversityCard from "@/components/University-s4/UniversityCard";
 import { useShortlistedUniversities } from "@/hooks/useShortlistedUniversities";
-import { universityApi } from "@/lib/api";
-import { Trash2, Mail, Share2 } from "lucide-react";
+import { Trash2, Mail } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function ShortlistedUniversitiesPage() {
@@ -29,6 +28,7 @@ export default function ShortlistedUniversitiesPage() {
 
   const handleRemove = (universityId: string) => {
     removeFromShortlist(universityId);
+    setSelectedForComparison((prev) => prev.filter((id) => id !== universityId));
   };
 
   const handleToggleCompare = (universityId: string) => {
@@ -105,6 +105,8 @@ export default function ShortlistedUniversitiesPage() {
       )
     ) {
       clearShortlist();
+      setSelectedForComparison([]);
+      setShowComparisonPanel(false);
     }
   };
 
@@ -119,7 +121,7 @@ export default function ShortlistedUniversitiesPage() {
   return (
     <ProtectedRoute requiredRole="student">
       <UniversityLayout>
-        <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto space-y-8">
+        <div className="mx-auto w-full max-w-7xl space-y-8">
           {/* Breadcrumb */}
           <Breadcrumb
             items={[
@@ -164,8 +166,8 @@ export default function ShortlistedUniversitiesPage() {
             <>
               {/* Shortlist Stats & Actions */}
               <div className="mb-6 bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div>
+                <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+                  <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
                       <h3 className="text-sm font-semibold text-gray-700">
@@ -183,11 +185,11 @@ export default function ShortlistedUniversitiesPage() {
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 xl:justify-end">
                     {shortlisted.length > 1 && (
                       <button
                         onClick={handleClearAll}
-                        className="flex items-center gap-2 px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
                       >
                         <Trash2 className="w-4 h-4" />
                         Clear All
@@ -195,8 +197,10 @@ export default function ShortlistedUniversitiesPage() {
                     )}
                     <button
                       onClick={handleInformCounselor}
-                      disabled={informingCounselor || shortlisted.length === 0}
-                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={
+                        informingCounselor || loading || shortlisted.length === 0
+                      }
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Mail className="w-4 h-4" />
                       {informingCounselor ? "Informing..." : "Inform Counselor"}
@@ -208,8 +212,14 @@ export default function ShortlistedUniversitiesPage() {
               {/* Shortlisted Universities Grid */}
               <div className="space-y-6">
                 {shortlisted.map((university) => (
-                  <div key={university.universityId} className="space-y-3">
-                    <div className="flex justify-end">
+                  <div
+                    key={university.universityId}
+                    className="rounded-2xl border border-gray-200 bg-white/50 p-3 sm:p-4 space-y-3"
+                  >
+                    <div className="flex flex-wrap justify-between items-center gap-2">
+                      <div className="text-xs text-gray-500">
+                        Added to shortlist
+                      </div>
                       <label className="inline-flex items-center gap-2 cursor-pointer rounded-full border border-gray-200 bg-white px-3 py-2 shadow-sm hover:border-blue-300 transition-colors">
                         <input
                           type="checkbox"
@@ -246,7 +256,7 @@ export default function ShortlistedUniversitiesPage() {
                       onVisitWebsite={() => {}}
                     />
 
-                    <div className="flex justify-end">
+                    <div className="flex justify-end pt-1">
                       <button
                         onClick={() => handleRemove(university.universityId)}
                         className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -260,10 +270,10 @@ export default function ShortlistedUniversitiesPage() {
               </div>
 
               {selectedForComparison.length >= 2 && (
-                <div className="flex justify-end">
+                <div className="sticky bottom-4 z-10 pointer-events-none">
                   <button
                     onClick={handleCompareNow}
-                    className="mt-2 inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-md hover:bg-blue-700 transition-colors"
+                    className="mt-2 ml-auto mr-0 block w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-md hover:bg-blue-700 transition-colors pointer-events-auto"
                   >
                     Compare Now ({selectedForComparison.length})
                   </button>
