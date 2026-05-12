@@ -48,7 +48,6 @@ type CachedState = {
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
-const CACHE_TTL_MS = 60 * 1000;
 
 let dashboardUpdatesCache: CachedState | null = null;
 
@@ -310,17 +309,6 @@ export function useStudentDashboardUpdates() {
       return;
     }
 
-    const now = Date.now();
-    if (
-      dashboardUpdatesCache &&
-      dashboardUpdatesCache.token === token &&
-      now - dashboardUpdatesCache.timestamp < CACHE_TTL_MS
-    ) {
-      setState(dashboardUpdatesCache.state);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -392,7 +380,7 @@ export function useStudentDashboardUpdates() {
 
       dashboardUpdatesCache = {
         token,
-        timestamp: now,
+        timestamp: Date.now(),
         state: nextState,
       };
 
@@ -405,7 +393,15 @@ export function useStudentDashboardUpdates() {
   }, [token]);
 
   useEffect(() => {
+    // Initial load
     loadUpdates();
+
+    // Poll for updates every 30 seconds
+    const pollInterval = setInterval(() => {
+      loadUpdates();
+    }, 30 * 1000);
+
+    return () => clearInterval(pollInterval);
   }, [loadUpdates]);
 
   return {

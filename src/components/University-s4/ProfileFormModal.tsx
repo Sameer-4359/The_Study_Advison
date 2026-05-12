@@ -435,6 +435,7 @@ interface ProfileFormModalProps {
   onClose: () => void;
   onSubmit: (profile: StudentProfileRequest) => void;
   initialData?: StudentProfileRequest;
+  originalProfileData?: StudentProfileRequest;
 }
 
 const educationLevels = [
@@ -481,6 +482,7 @@ export default function ProfileFormModal({
   onClose,
   onSubmit,
   initialData,
+  originalProfileData,
 }: ProfileFormModalProps) {
   const [formData, setFormData] = useState<StudentProfileRequest>({
     gpa: initialData?.gpa || 3.0,
@@ -505,6 +507,13 @@ export default function ProfileFormModal({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const handleResetToProfile = () => {
+    if (originalProfileData) {
+      setFormData(originalProfileData);
+      setErrors({});
+    }
+  };
 
   // Conditional field visibility
   const showTestScores = ["MASTERS", "PHD", "MBA", "RESEARCH_MASTERS"].includes(formData.desired_program);
@@ -1126,11 +1135,20 @@ export default function ProfileFormModal({
               >
                 Cancel
               </button>
+              {originalProfileData && (
+                <button
+                  type="button"
+                  onClick={handleResetToProfile}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Reset to Profile
+                </button>
+              )}
               <button
                 type="submit"
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Save Profile & Get Recommendations
+                Generate Recommendations
               </button>
             </div>
           </div>

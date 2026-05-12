@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import WelcomeBanner from "@/components/std-dash-s1/WelcomeBanner";
 import FeatureCard from "@/components/std-dash-s1/FeatureCard";
 import RecentUpdates from "@/components/std-dash-s1/RecentUpdates";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { useStudentDashboardUpdates } from "@/hooks/useStudentDashboardUpdates";
 import ProfileOverview from "@/components/dashboard/ProfileOverview";
 import {
@@ -136,156 +137,160 @@ export default function DashboardPage() {
   const sopStatus = getSopStatus();
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
-      {/* Welcome Banner */}
-      <WelcomeBanner />
+    <ProtectedRoute requiredRole="student">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+        {/* Welcome Banner */}
+        <WelcomeBanner />
 
-      {/* Profile Overview */}
-      <ProfileOverview />
+        {/* Profile Overview */}
+        <ProfileOverview />
 
-      {/* Feature Cards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Profile Setup */}
-        <FeatureCard
-          icon={UserCircle}
-          iconBgColor="#DBEAFE"
-          iconColor="#3B82F6"
-          title="Profile Setup"
-          description="Complete your personal and academic information"
-          progress={metrics.profileCompletion}
-          progressColor={profileStatus.progressColor}
-          statusIcon={profileStatus.statusIcon}
-          statusIconColor={profileStatus.statusIconColor}
-          leftButton={{
-            text: profileStatus.leftButtonText,
-            bgColor: profileStatus.leftButtonBg,
-            textColor: profileStatus.leftButtonTextColor,
-          }}
-          rightButton={{
-            text: metrics.profileCompletion > 0 ? "Review" : "Start",
-            onClick: () => router.push("/profile-setup"),
-          }}
-          onClick={() => router.push("/profile-setup")}
-        />
+        {/* Feature Cards Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          {/* Profile Setup */}
+          <FeatureCard
+            icon={UserCircle}
+            iconBgColor="#DBEAFE"
+            iconColor="#3B82F6"
+            title="Profile Setup"
+            description="Complete your personal and academic information"
+            progress={metrics.profileCompletion}
+            progressColor={profileStatus.progressColor}
+            statusIcon={profileStatus.statusIcon}
+            statusIconColor={profileStatus.statusIconColor}
+            leftButton={{
+              text: profileStatus.leftButtonText,
+              bgColor: profileStatus.leftButtonBg,
+              textColor: profileStatus.leftButtonTextColor,
+            }}
+            rightButton={{
+              text: metrics.profileCompletion > 0 ? "Review" : "Start",
+              onClick: () => router.push("/profile-setup"),
+            }}
+            onClick={() => router.push("/profile-setup")}
+          />
 
-        {/* Document Upload */}
-        <FeatureCard
-          icon={Upload}
-          iconBgColor="#DBEAFE"
-          iconColor="#3B82F6"
-          title="Document Upload"
-          description="Upload certificates, transcripts, and passport"
-          progress={metrics.documentProgress}
-          progressColor={documentStatus.progressColor}
-          statusIcon={documentStatus.statusIcon}
-          statusIconColor={documentStatus.statusIconColor}
-          leftButton={{
-            text: documentStatus.leftButtonText,
-            bgColor: documentStatus.leftButtonBg,
-            textColor: documentStatus.leftButtonTextColor,
-          }}
-          rightButton={{
-            text: metrics.documentProgress > 0 ? "Continue" : "Start",
-            onClick: () => router.push("/document-upload"),
-          }}
-          onClick={() => router.push("/document-upload")}
-        />
+          {/* Document Upload */}
+          <FeatureCard
+            icon={Upload}
+            iconBgColor="#DBEAFE"
+            iconColor="#3B82F6"
+            title="Document Upload"
+            description="Upload certificates, transcripts, and passport"
+            progress={metrics.documentProgress}
+            progressColor={documentStatus.progressColor}
+            statusIcon={documentStatus.statusIcon}
+            statusIconColor={documentStatus.statusIconColor}
+            leftButton={{
+              text: documentStatus.leftButtonText,
+              bgColor: documentStatus.leftButtonBg,
+              textColor: documentStatus.leftButtonTextColor,
+            }}
+            rightButton={{
+              text: metrics.documentProgress > 0 ? "Continue" : "Start",
+              onClick: () => router.push("/document-upload"),
+            }}
+            onClick={() => router.push("/document-upload")}
+          />
 
-        {/* Application Readiness */}
-        <FeatureCard
-          icon={Target}
-          iconBgColor="#DCFCE7"
-          iconColor="#16A34A"
-          title="Application Readiness"
-          description="Combined readiness from profile, documents, and SOP progress"
-          statusIcon={metrics.readinessScore >= 80 ? Check : Edit}
-          statusIconColor={metrics.readinessScore >= 80 ? "#16A34A" : "#3B82F6"}
-          leftButton={{
-            text: `${metrics.readinessScore}% Ready`,
-            bgColor: metrics.readinessScore >= 80 ? "#DCFCE7" : "#DBEAFE",
-            textColor: metrics.readinessScore >= 80 ? "#15803D" : "#2563EB",
-          }}
-          rightButton={{
-            text: "Explore",
-            onClick: () => router.push("/university-recommendations"),
-          }}
-          onClick={() => router.push("/university-recommendations")}
-        />
+          {/* Application Readiness */}
+          <FeatureCard
+            icon={Target}
+            iconBgColor="#DCFCE7"
+            iconColor="#16A34A"
+            title="Application Readiness"
+            description="Combined readiness from profile, documents, and SOP progress"
+            statusIcon={metrics.readinessScore >= 80 ? Check : Edit}
+            statusIconColor={
+              metrics.readinessScore >= 80 ? "#16A34A" : "#3B82F6"
+            }
+            leftButton={{
+              text: `${metrics.readinessScore}% Ready`,
+              bgColor: metrics.readinessScore >= 80 ? "#DCFCE7" : "#DBEAFE",
+              textColor: metrics.readinessScore >= 80 ? "#15803D" : "#2563EB",
+            }}
+            rightButton={{
+              text: "Explore",
+              onClick: () => router.push("/university-recommendations"),
+            }}
+            onClick={() => router.push("/university-recommendations")}
+          />
 
-        {/* Pending Checklist */}
-        <FeatureCard
-          icon={ClipboardList}
-          iconBgColor="#FEF3C7"
-          iconColor="#F59E0B"
-          title="Pending Checklist"
-          description="Track remaining tasks before recommendations and applications"
-          statusIcon={Clock}
-          statusIconColor="#F59E0B"
-          leftButton={{
-            text: `${metrics.pendingActionCount} Pending`,
-            bgColor: "#FEF3C7",
-            textColor: "#F59E0B",
-          }}
-          rightButton={{
-            text: metrics.nextActionLabel,
-            onClick: () => router.push(metrics.nextActionPath),
-          }}
-          onClick={() => router.push(metrics.nextActionPath)}
-        />
+          {/* Pending Checklist */}
+          <FeatureCard
+            icon={ClipboardList}
+            iconBgColor="#FEF3C7"
+            iconColor="#F59E0B"
+            title="Pending Checklist"
+            description="Track remaining tasks before recommendations and applications"
+            statusIcon={Clock}
+            statusIconColor="#F59E0B"
+            leftButton={{
+              text: `${metrics.pendingActionCount} Pending`,
+              bgColor: "#FEF3C7",
+              textColor: "#F59E0B",
+            }}
+            rightButton={{
+              text: metrics.nextActionLabel,
+              onClick: () => router.push(metrics.nextActionPath),
+            }}
+            onClick={() => router.push(metrics.nextActionPath)}
+          />
 
-        {/* SOP Review Status */}
-        <FeatureCard
-          icon={FileText}
-          iconBgColor="#EEF2FF"
-          iconColor="#4F46E5"
-          title="SOP Review Status"
-          description="Monitor your current SOP lifecycle and review stage"
-          statusIcon={sopStatus.icon}
-          statusIconColor={sopStatus.iconColor}
-          leftButton={{
-            text: sopStatus.text,
-            bgColor: sopStatus.bgColor,
-            textColor: sopStatus.textColor,
-          }}
-          rightButton={{
-            text: "Open SOP",
-            onClick: () => router.push("/ai-sop-writer"),
-          }}
-          onClick={() => router.push("/ai-sop-writer")}
-        />
+          {/* SOP Review Status */}
+          <FeatureCard
+            icon={FileText}
+            iconBgColor="#EEF2FF"
+            iconColor="#4F46E5"
+            title="SOP Review Status"
+            description="Monitor your current SOP lifecycle and review stage"
+            statusIcon={sopStatus.icon}
+            statusIconColor={sopStatus.iconColor}
+            leftButton={{
+              text: sopStatus.text,
+              bgColor: sopStatus.bgColor,
+              textColor: sopStatus.textColor,
+            }}
+            rightButton={{
+              text: "Open SOP",
+              onClick: () => router.push("/ai-sop-writer"),
+            }}
+            onClick={() => router.push("/ai-sop-writer")}
+          />
 
-        {/* Activity Feed */}
-        <FeatureCard
-          icon={Bell}
-          iconBgColor="#DBEAFE"
-          iconColor="#3B82F6"
-          title="Activity Feed"
-          description="Live account updates from profile, documents, and SOP actions"
-          statusIcon={Edit}
-          statusIconColor="#3B82F6"
-          leftButton={{
-            text: `${updates.length} Updates`,
-            bgColor: "#DBEAFE",
-            textColor: "#2563EB",
-          }}
-          rightButton={{
-            text: "View Feed",
-            onClick: () => {
+          {/* Activity Feed */}
+          <FeatureCard
+            icon={Bell}
+            iconBgColor="#DBEAFE"
+            iconColor="#3B82F6"
+            title="Activity Feed"
+            description="Live account updates from profile, documents, and SOP actions"
+            statusIcon={Edit}
+            statusIconColor="#3B82F6"
+            leftButton={{
+              text: `${updates.length} Updates`,
+              bgColor: "#DBEAFE",
+              textColor: "#2563EB",
+            }}
+            rightButton={{
+              text: "View Feed",
+              onClick: () => {
+                const section = document.getElementById("recent-updates");
+                section?.scrollIntoView({ behavior: "smooth", block: "start" });
+              },
+            }}
+            onClick={() => {
               const section = document.getElementById("recent-updates");
               section?.scrollIntoView({ behavior: "smooth", block: "start" });
-            },
-          }}
-          onClick={() => {
-            const section = document.getElementById("recent-updates");
-            section?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }}
-        />
-      </div>
+            }}
+          />
+        </div>
 
-      {/* Recent Updates */}
-      <section id="recent-updates">
-        <RecentUpdates updates={updates} loading={loading} />
-      </section>
-    </div>
+        {/* Recent Updates */}
+        <section id="recent-updates">
+          <RecentUpdates updates={updates} loading={loading} />
+        </section>
+      </div>
+    </ProtectedRoute>
   );
 }

@@ -185,8 +185,7 @@
 //     </div>
 //   );
 // }
-//after data 
-
+//after data
 
 // // components/UniversityCard.tsx
 // "use client";
@@ -370,12 +369,22 @@
 //   );
 // }
 
-
 // components/University-s4/UniversityCard.tsx - UPDATED VERSION
 "use client";
 
 import React from "react";
-import { MapPin, DollarSign, Calendar, Heart, Bookmark, TrendingUp, Award, Globe } from "lucide-react";
+import {
+  MapPin,
+  DollarSign,
+  Calendar,
+  Heart,
+  Bookmark,
+  TrendingUp,
+  Award,
+  Globe,
+  Check,
+  Star,
+} from "lucide-react";
 
 export type UniversityRequirements = {
   minGPA: string;
@@ -395,9 +404,10 @@ export type UniversityCardProps = {
   requirements: UniversityRequirements;
   isRecommended?: boolean;
   isSaved?: boolean;
+  isShortlisted?: boolean;
   onSave?: () => void;
   onVisitWebsite?: () => void;
-  onApplyNow?: () => void;
+  onShortlist?: () => void;
   // New props
   acceptanceRate?: number;
   scholarshipAvailable?: boolean;
@@ -419,8 +429,9 @@ export default function UniversityCard({
   requirements,
   isRecommended = false,
   isSaved = false,
+  isShortlisted = false,
   onSave,
-  onApplyNow,
+  onShortlist,
   onVisitWebsite,
   acceptanceRate,
   scholarshipAvailable,
@@ -431,11 +442,14 @@ export default function UniversityCard({
 }: UniversityCardProps) {
   const getMatchColor = (percentage: number) => {
     if (percentage >= 80) return "text-green-600 bg-green-50 border-green-200";
-    if (percentage >= 60) return "text-yellow-600 bg-yellow-50 border-yellow-200";
+    if (percentage >= 60)
+      return "text-yellow-600 bg-yellow-50 border-yellow-200";
     return "text-orange-600 bg-orange-50 border-orange-200";
   };
 
-  const getAdmissionChance = (percentage: number): { label: string; color: string } => {
+  const getAdmissionChance = (
+    percentage: number,
+  ): { label: string; color: string } => {
     if (percentage >= 85) return { label: "Very High", color: "bg-green-500" };
     if (percentage >= 70) return { label: "High", color: "bg-green-400" };
     if (percentage >= 55) return { label: "Moderate", color: "bg-yellow-500" };
@@ -483,7 +497,7 @@ export default function UniversityCard({
                   </div>
                 </div>
               </div>
-              
+
               {/* Ranking Badge */}
               {ranking !== "Not Ranked" && (
                 <div className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
@@ -496,58 +510,67 @@ export default function UniversityCard({
       </div>
 
       {/* Match Score with Admission Chance */}
-      {(matchPercentage !== undefined && matchPercentage > 0) && (
-      <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">Admission Chance</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className={`px-3 py-1 rounded-lg font-semibold text-sm border ${getMatchColor(matchPercentage)}`}>
-              {matchPercentage}% Match
-            </div>
+      {matchPercentage !== undefined && matchPercentage > 0 && (
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${admissionChance.color}`}></div>
-              <span className="text-sm font-medium text-gray-700">{admissionChance.label}</span>
+              <TrendingUp className="w-4 h-4 text-gray-600" />
+              <span className="text-sm font-medium text-gray-700">
+                Admission Chance
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div
+                className={`px-3 py-1 rounded-lg font-semibold text-sm border ${getMatchColor(matchPercentage)}`}
+              >
+                {matchPercentage}% Match
+              </div>
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-3 h-3 rounded-full ${admissionChance.color}`}
+                ></div>
+                <span className="text-sm font-medium text-gray-700">
+                  {admissionChance.label}
+                </span>
+              </div>
             </div>
           </div>
+
+          {/* Score Breakdown */}
+          {(similarityScore !== undefined ||
+            eligibilityScore !== undefined) && (
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              {eligibilityScore !== undefined && (
+                <div>
+                  <div className="flex justify-between text-xs text-gray-600 mb-1">
+                    <span>Eligibility</span>
+                    <span>{Math.round(eligibilityScore * 100)}%</span>
+                  </div>
+                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500 rounded-full"
+                      style={{ width: `${eligibilityScore * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+              {similarityScore !== undefined && (
+                <div>
+                  <div className="flex justify-between text-xs text-gray-600 mb-1">
+                    <span>Similarity</span>
+                    <span>{Math.round(similarityScore * 100)}%</span>
+                  </div>
+                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500 rounded-full"
+                      style={{ width: `${similarityScore * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-        
-        {/* Score Breakdown */}
-        {(similarityScore !== undefined || eligibilityScore !== undefined) && (
-          <div className="mt-2 grid grid-cols-2 gap-3">
-            {eligibilityScore !== undefined && (
-              <div>
-                <div className="flex justify-between text-xs text-gray-600 mb-1">
-                  <span>Eligibility</span>
-                  <span>{Math.round(eligibilityScore * 100)}%</span>
-                </div>
-                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-green-500 rounded-full" 
-                    style={{ width: `${eligibilityScore * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
-            {similarityScore !== undefined && (
-              <div>
-                <div className="flex justify-between text-xs text-gray-600 mb-1">
-                  <span>Similarity</span>
-                  <span>{Math.round(similarityScore * 100)}%</span>
-                </div>
-                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-blue-500 rounded-full" 
-                    style={{ width: `${similarityScore * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
       )}
 
       {/* Description */}
@@ -601,9 +624,7 @@ export default function UniversityCard({
           {acceptanceRate && (
             <div className="bg-gray-50 p-2 rounded-lg">
               <span className="text-gray-600 text-xs">Acceptance Rate</span>
-              <p className="font-semibold text-gray-900">
-                {acceptanceRate}%
-              </p>
+              <p className="font-semibold text-gray-900">{acceptanceRate}%</p>
             </div>
           )}
         </div>
@@ -644,7 +665,10 @@ export default function UniversityCard({
           </h4>
           <ul className="space-y-1">
             {reasons.slice(0, 3).map((reason, index) => (
-              <li key={index} className="flex items-start gap-2 text-sm text-gray-600">
+              <li
+                key={index}
+                className="flex items-start gap-2 text-sm text-gray-600"
+              >
                 <span className="text-green-500 mt-0.5">✓</span>
                 <span>{reason}</span>
               </li>
@@ -666,9 +690,9 @@ export default function UniversityCard({
         <button
           onClick={onSave}
           className={`flex items-center justify-center gap-2 px-4 py-2.5 border rounded-lg transition-colors text-sm font-medium ${
-            isSaved 
-              ? 'bg-blue-50 border-blue-300 text-blue-700' 
-              : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            isSaved
+              ? "bg-blue-50 border-blue-300 text-blue-700"
+              : "border-gray-300 text-gray-700 hover:bg-gray-50"
           }`}
         >
           <Bookmark
@@ -685,10 +709,24 @@ export default function UniversityCard({
           </button>
         )}
         <button
-          onClick={onApplyNow}
-          className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-colors text-sm font-semibold"
+          onClick={onShortlist}
+          className={`flex-1 px-4 py-2.5 rounded-lg transition-colors text-sm font-semibold flex items-center justify-center gap-2 ${
+            isShortlisted
+              ? "bg-green-50 border border-green-300 text-green-700"
+              : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
+          }`}
         >
-          Apply Now
+          {isShortlisted ? (
+            <>
+              <Check className="w-4 h-4" />
+              Shortlisted
+            </>
+          ) : (
+            <>
+              <Star className="w-4 h-4" />
+              Shortlist University
+            </>
+          )}
         </button>
       </div>
     </div>

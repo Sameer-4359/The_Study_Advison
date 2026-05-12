@@ -1,36 +1,26 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { Menu, Bell, GraduationCap, LogOut } from "lucide-react";
+import React from "react";
+import { Menu, GraduationCap, LogOut, Star } from "lucide-react";
+import Link from "next/link";
 import { headerData } from "@/data/std-dash-s1-data/headerData";
 import { useAuth } from "@/context/AuthContext";
-import { useStudentDashboardUpdates } from "@/hooks/useStudentDashboardUpdates";
+import { useShortlistedUniversities } from "@/hooks/useShortlistedUniversities";
+import NavbarNotification from "@/components/NavbarNotification";
 
 type HeaderProps = {
   onToggleSidebar: () => void;
-  notificationCount?: number;
 };
 
-export default function Header({
-  onToggleSidebar,
-  notificationCount,
-}: HeaderProps) {
+export default function Header({ onToggleSidebar }: HeaderProps) {
   const { user, logout } = useAuth();
-  const { updates, notificationCount: dynamicNotificationCount } =
-    useStudentDashboardUpdates();
-
-  const [notificationOpen, setNotificationOpen] = useState(false);
+  const { getCount } = useShortlistedUniversities();
 
   const userName = user?.fullName || headerData.defaultUser.name;
   const userRole = user?.role || headerData.defaultUser.role;
   const initial = userName?.trim()?.[0]?.toUpperCase() ?? "S";
 
-  const badgeCount =
-    typeof notificationCount === "number"
-      ? notificationCount
-      : dynamicNotificationCount;
-
-  const topUpdates = useMemo(() => updates.slice(0, 4), [updates]);
+  const shortlistCount = getCount();
 
   const handleLogout = () => {
     logout();
@@ -64,48 +54,22 @@ export default function Header({
         </div>
 
         <div className="flex items-center gap-3 sm:gap-6">
-          <div className="relative">
-            <button
-              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              onClick={() => setNotificationOpen((open) => !open)}
-              aria-label="Notifications"
-            >
-              <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
-              {badgeCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center">
-                  {badgeCount > 9 ? "9+" : badgeCount}
-                </span>
-              )}
-            </button>
-
-            {notificationOpen && (
-              <div className="absolute right-0 mt-2 w-[320px] bg-white border border-gray-200 rounded-xl shadow-xl p-3 space-y-2">
-                <div className="px-2 pb-1 border-b border-gray-100">
-                  <p className="text-sm font-semibold text-gray-900">
-                    Recent Updates
-                  </p>
-                </div>
-
-                {topUpdates.length === 0 && (
-                  <p className="text-sm text-gray-600 px-2 py-3">
-                    No updates available.
-                  </p>
-                )}
-
-                {topUpdates.map((update) => (
-                  <div
-                    key={update.id}
-                    className="px-2 py-2 rounded-lg bg-gray-50"
-                  >
-                    <p className="text-sm text-gray-800 font-medium leading-snug">
-                      {update.message}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">{update.time}</p>
-                  </div>
-                ))}
-              </div>
+          {/* Shortlist Badge */}
+          <Link
+            href="/dashboard/shortlisted-universities"
+            className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors group"
+            aria-label="Shortlisted universities"
+            title="Shortlisted Universities"
+          >
+            <Star className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 group-hover:text-blue-600 transition-colors" />
+            {shortlistCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white text-xs font-semibold rounded-full flex items-center justify-center">
+                {shortlistCount > 9 ? "9+" : shortlistCount}
+              </span>
             )}
-          </div>
+          </Link>
+
+          <NavbarNotification />
 
           <button
             onClick={handleLogout}
