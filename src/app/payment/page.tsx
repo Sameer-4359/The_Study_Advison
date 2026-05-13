@@ -1,6 +1,6 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
@@ -45,7 +45,7 @@ const luhnCheck = (value: string) => {
   return sum % 10 === 0;
 };
 
-export default function PaymentPage() {
+function PaymentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { signup } = useAuth();
@@ -280,5 +280,27 @@ export default function PaymentPage() {
         </section>
       </main>
     </div>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50">
+          <Navbar />
+          <main className="max-w-6xl mx-auto px-6 py-16">
+            <section className="bg-white rounded-2xl shadow-lg p-8">
+              <h1 className="text-3xl font-bold text-gray-900">
+                Secure Payment
+              </h1>
+              <p className="mt-2 text-gray-600">Loading payment details...</p>
+            </section>
+          </main>
+        </div>
+      }
+    >
+      <PaymentContent />
+    </Suspense>
   );
 }
