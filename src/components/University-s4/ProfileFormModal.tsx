@@ -429,6 +429,16 @@
 import React, { useState, useEffect } from "react";
 import { X, HelpCircle } from "lucide-react";
 import { StudentProfileRequest } from "@/lib/api";
+import {
+  RECOMMENDATION_COUNTRIES,
+  RECOMMENDATION_FIELDS,
+  RECOMMENDATION_INTAKES,
+  RECOMMENDATION_PROGRAM_LEVELS,
+  RECOMMENDATION_STUDY_MODES,
+  normalizeRecommendationCountry,
+  normalizeRecommendationField,
+  normalizeRecommendationProgramLevel,
+} from "@/lib/recommendationDatasetOptions";
 
 interface ProfileFormModalProps {
   isOpen: boolean;
@@ -442,40 +452,13 @@ const educationLevels = [
   { value: "HIGH_SCHOOL", label: "High School" },
   { value: "BACHELORS", label: "Bachelor's Degree" },
   { value: "MASTERS", label: "Master's Degree" },
-  { value: "PHD", label: "PhD" },
-  { value: "POST_DOCTORAL", label: "Post Doctoral" },
 ];
 
-const programTypes = [
-  { value: "BACHELORS", label: "Bachelor's" },
-  { value: "MASTERS", label: "Master's" },
-  { value: "PHD", label: "PhD" },
-  { value: "MBA", label: "MBA" },
-  { value: "RESEARCH_MASTERS", label: "Research Master's" },
-  { value: "EXECUTIVE_EDUCATION", label: "Executive Education" },
-  { value: "RESEARCH_FELLOWSHIP", label: "Research Fellowship" },
-];
-
-const countries = [
-  "United States", "United Kingdom", "Canada", "Australia", "Germany",
-  "France", "Netherlands", "Sweden", "Switzerland", "Singapore",
-  "Japan", "South Korea", "China", "Italy", "Spain"
-];
-
-const fieldsOfStudy = [
-  "Computer Science", "Business Administration", "Engineering",
-  "Data Science", "Medicine", "Law", "Psychology", "Biology",
-  "Physics", "Mathematics", "Economics", "Finance"
-];
-
-const intakeOptions = [
-  "FALL_2024", "SPRING_2025", "SUMMER_2025", "FALL_2025",
-  "FALL", "SPRING", "SUMMER", "WINTER"
-];
-
-const studyModes = [
-  "FULL_TIME", "PART_TIME", "ONLINE", "HYBRID"
-];
+const programTypes = RECOMMENDATION_PROGRAM_LEVELS;
+const countries = RECOMMENDATION_COUNTRIES;
+const fieldsOfStudy = RECOMMENDATION_FIELDS;
+const intakeOptions = RECOMMENDATION_INTAKES;
+const studyModes = RECOMMENDATION_STUDY_MODES;
 
 export default function ProfileFormModal({
   isOpen,
@@ -492,10 +475,16 @@ export default function ProfileFormModal({
     work_experience_relevant: initialData?.work_experience_relevant || false,
     leadership_experience: initialData?.leadership_experience || false,
     current_education_level: initialData?.current_education_level || "BACHELORS",
-    field_of_study: initialData?.field_of_study || "Computer Science",
+    field_of_study:
+      normalizeRecommendationField(initialData?.field_of_study) ||
+      "Computer Science",
     institution_name: initialData?.institution_name || "",
-    desired_program: initialData?.desired_program || "MASTERS",
-    preferred_countries: initialData?.preferred_countries || [],
+    desired_program:
+      normalizeRecommendationProgramLevel(initialData?.desired_program) ||
+      "Masters",
+    preferred_countries: (initialData?.preferred_countries || [])
+      .map((country) => normalizeRecommendationCountry(country))
+      .filter(Boolean),
     ielts_score: initialData?.ielts_score,
     toefl_score: initialData?.toefl_score,
     gre_score: initialData?.gre_score,
@@ -516,9 +505,9 @@ export default function ProfileFormModal({
   };
 
   // Conditional field visibility
-  const showTestScores = ["MASTERS", "PHD", "MBA", "RESEARCH_MASTERS"].includes(formData.desired_program);
-  const showResearchFields = ["MASTERS", "PHD", "RESEARCH_MASTERS", "RESEARCH_FELLOWSHIP"].includes(formData.desired_program);
-  const showWorkExperience = ["MBA", "EXECUTIVE_EDUCATION"].includes(formData.desired_program);
+  const showTestScores = formData.desired_program === "Masters";
+  const showResearchFields = formData.desired_program === "Masters";
+  const showWorkExperience = false;
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};

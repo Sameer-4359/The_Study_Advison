@@ -17,16 +17,15 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/apiConfig";
+import {
+  RECOMMENDATION_COUNTRIES,
+  RECOMMENDATION_FIELDS,
+  RECOMMENDATION_PROGRAM_LEVELS,
+} from "@/lib/recommendationDatasetOptions";
 
-const PROGRAM_LEVELS = ["BACHELORS", "MASTERS", "PHD", "DIPLOMA", "MBA"];
-const COUNTRIES = ["USA", "Canada", "UK", "Australia", "Germany", "France"];
-const FIELDS = [
-  "Computer Science",
-  "Engineering",
-  "Business",
-  "Medicine",
-  "Arts",
-];
+const PROGRAM_LEVELS = RECOMMENDATION_PROGRAM_LEVELS;
+const COUNTRIES = RECOMMENDATION_COUNTRIES;
+const FIELDS = RECOMMENDATION_FIELDS;
 
 type University = {
   id?: number;
@@ -241,9 +240,9 @@ export default function ExploreUniversitiesPage() {
                           className="w-full mt-1 p-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
                         >
                           <option value="">Select Level</option>
-                          {PROGRAM_LEVELS.map((l) => (
-                            <option key={l} value={l}>
-                              {l}
+                          {PROGRAM_LEVELS.map((level) => (
+                            <option key={level.value} value={level.value}>
+                              {level.label}
                             </option>
                           ))}
                         </select>

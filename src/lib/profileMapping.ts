@@ -3,6 +3,11 @@
 
 import { ProfileData } from "@/hooks/useProfile";
 import { StudentProfileRequest } from "@/lib/api";
+import {
+  normalizeRecommendationCountry,
+  normalizeRecommendationField,
+  normalizeRecommendationProgramLevel,
+} from "@/lib/recommendationDatasetOptions";
 
 /**
  * Maps main dashboard profile data to university recommendation profile format
@@ -23,24 +28,30 @@ export function mapMainProfileToRecommendationProfile(
       leadership_experience: false,
       current_education_level: "BACHELORS",
       field_of_study: "Computer Science",
-      desired_program: "MASTERS",
+      desired_program: "Masters",
       preferred_countries: [],
     };
   }
+
+  const preferredCountry = normalizeRecommendationCountry(
+    mainProfile.preferredCountry,
+  );
 
   // Map fields from main profile to recommendation profile
   return {
     // Core academic fields
     gpa: mainProfile.cgpa || 3.0,
     current_education_level: mainProfile.currentEducationLevel || "BACHELORS",
-    field_of_study: mainProfile.fieldOfStudy || "Computer Science",
+    field_of_study:
+      normalizeRecommendationField(mainProfile.fieldOfStudy) ||
+      "Computer Science",
     institution_name: mainProfile.institutionName,
 
     // Program preference
-    desired_program: mainProfile.desiredProgram || "MASTERS",
-    preferred_countries: mainProfile.preferredCountry
-      ? [mainProfile.preferredCountry]
-      : [],
+    desired_program:
+      normalizeRecommendationProgramLevel(mainProfile.desiredProgram) ||
+      "Masters",
+    preferred_countries: preferredCountry ? [preferredCountry] : [],
 
     // Test scores
     ielts_score: mainProfile.ieltsScore,
