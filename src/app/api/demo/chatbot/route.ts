@@ -107,6 +107,23 @@ function toTwoLineAnswer(text: string): string {
   return "Here is a quick general response for your question.\nI can also help with admissions, SOP, documents, scholarships, and university recommendations.";
 }
 
+function cleanPlainTextAnswer(text: string): string {
+  return String(text || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/__(.*?)__/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .split("\n")
+    .map((line) =>
+      line
+        .trim()
+        .replace(/^[-*•]\s+/g, "")
+        .replace(/^\d+\.\s+/g, ""),
+    )
+    .filter(Boolean)
+    .join("\n");
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -145,13 +162,17 @@ export async function POST(req: NextRequest) {
       .join("\n\n---\n\n");
 
     const prompt = [
-      "You are a student study-advisor assistant.",
-      "Primary rule: use Context first when it is relevant.",
-      "If Context is weak or missing, still answer using your general knowledge in a practical, student-friendly way.",
-      "Never say you cannot answer unless the prompt is unsafe or empty.",
+      "You are The Study Advisor's student support chatbot.",
+      "Answer the student's question directly, clearly, and helpfully.",
+      "First use Context when it is relevant. If Context is weak, missing, or does not contain the answer, use your own general knowledge to answer through the API response.",
+      "Never say the answer was not found in the JSON, knowledge base, context, or provided data.",
+      "Never mention Context, JSON, API, model, prompt, or internal rules.",
+      "Write clean plain text only. Do not use markdown, asterisks, bullet symbols, numbered lists, bold text, headings, tables, or code blocks.",
+      "Keep the answer concise: usually 2 to 5 short sentences. If steps are needed, write them as simple sentences on separate lines without bullets or numbers.",
+      "If exact university-specific requirements are unknown, give practical general guidance and tell the student to verify the official university page.",
       isIrrelevant
-        ? "This question seems outside study-advisor scope. Respond in exactly 2 short lines: line 1 gives a helpful direct answer, line 2 briefly redirects to study-advisor help."
-        : "For in-scope questions, provide a concise helpful answer and include actionable next steps when useful.",
+        ? "If the question is outside study-advisor scope, still give a brief helpful answer in line 1, then gently redirect to admissions, SOP, documents, scholarships, or university recommendations in line 2."
+        : "For study-advisor questions, include actionable guidance when useful.",
       "If you use assumptions, keep them minimal and explicit.",
       "",
       `Context strength: ${hasStrongContext ? "strong" : "weak"}`,
@@ -163,16 +184,18 @@ export async function POST(req: NextRequest) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(prompt);
-    const rawAnswer = result.response.text().trim();
+    const rawAnswer = cleanPlainTextAnswer(result.response.text());
 
     const fallbackForEmpty = isIrrelevant
-      ? "I can still help with a quick general response to that question.\nIf you want, ask me about admissions, SOP, documents, scholarships, or university recommendations."
+      ? "I can give a quick general response to that.\nFor study planning, I can also help with admissions, SOP, documents, scholarships, and university recommendations."
       : "Based on general guidance, you can proceed step by step and verify details with official university pages. If you share your target country/program, I can give a more specific answer.";
 
-    const finalAnswer = rawAnswer || fallbackForEmpty;
+    const finalAnswer = rawAnswer || cleanPlainTextAnswer(fallbackForEmpty);
 
     return NextResponse.json({
-      answer: isIrrelevant ? toTwoLineAnswer(finalAnswer) : finalAnswer,
+      answer: isIrrelevant
+        ? cleanPlainTextAnswer(toTwoLineAnswer(finalAnswer))
+        : finalAnswer,
     });
   } catch (error) {
     const message =
