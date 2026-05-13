@@ -19,6 +19,10 @@ import {
   Check,
   Edit,
   Clock,
+  Globe2,
+  MapPin,
+  PlaneTakeoff,
+  Rocket,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -135,6 +139,41 @@ export default function DashboardPage() {
   const profileStatus = getProfileSetupStatus();
   const documentStatus = getDocumentStatus();
   const sopStatus = getSopStatus();
+  const journeySteps = [
+    {
+      title: "Profile Build",
+      detail: "Complete academics, goals, and budget preferences.",
+    },
+    {
+      title: "University Match",
+      detail: "Review programs that fit your study abroad plan.",
+    },
+    {
+      title: "Documents & SOP",
+      detail: "Prepare strong documents for counselor review.",
+    },
+    {
+      title: "Application Ready",
+      detail: "Track final actions before submitting applications.",
+    },
+  ];
+  const destinationCards = [
+    {
+      country: "Canada",
+      image: "/canada-campus.jpg",
+      caption: "Top choice for post-study work opportunities.",
+    },
+    {
+      country: "United Kingdom",
+      image: "/uk-campus.jpg",
+      caption: "Historic universities with strong global rankings.",
+    },
+    {
+      country: "Australia",
+      image: "/australia-campus.jpg",
+      caption: "Excellent student lifestyle and practical pathways.",
+    },
+  ];
 
   return (
     <ProtectedRoute requiredRole="student">
@@ -285,6 +324,97 @@ export default function DashboardPage() {
             }}
           />
         </div>
+
+        <section className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
+          <div className="rounded-2xl border border-indigo-100 bg-white/90 p-5 shadow-sm">
+            <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900">
+              <Rocket className="h-5 w-5 text-indigo-600" />
+              Application Journey
+            </h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {journeySteps.map((step, index) => (
+                <div
+                  key={step.title}
+                  className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4"
+                >
+                  <p className="mb-1 text-xs font-semibold text-indigo-600">
+                    Step {index + 1}
+                  </p>
+                  <h3 className="font-semibold text-gray-900">{step.title}</h3>
+                  <p className="text-sm text-gray-600">{step.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-indigo-100 bg-white/90 p-5 shadow-sm">
+            <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900">
+              <PlaneTakeoff className="h-5 w-5 text-indigo-600" />
+              Destination Snapshot
+            </h2>
+            <div className="mt-4 h-36 overflow-hidden rounded-xl border border-indigo-100">
+              <img
+                src="/canada-campus.jpg"
+                alt="Canada campus"
+                width={640}
+                height={256}
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-xl bg-indigo-50 p-3">
+                <p className="text-gray-500">Readiness</p>
+                <p className="font-bold text-indigo-700">
+                  {metrics.readinessScore}% Ready
+                </p>
+              </div>
+              <div className="rounded-xl bg-purple-50 p-3">
+                <p className="text-gray-500">Pending Tasks</p>
+                <p className="font-bold text-purple-700">
+                  {metrics.pendingActionCount}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
+            <Globe2 className="h-5 w-5 text-indigo-600" />
+            Popular Destinations
+          </h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            {destinationCards.map((destination) => (
+              <div
+                key={destination.country}
+                className="rounded-2xl border border-indigo-100 bg-white/90 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <div className="h-32 overflow-hidden rounded-xl border border-indigo-100">
+                  <img
+                    src={destination.image}
+                    alt={`${destination.country} campus`}
+                    width={640}
+                    height={256}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900">
+                    {destination.country}
+                  </h3>
+                  <MapPin className="h-4 w-4 text-indigo-600" />
+                </div>
+                <p className="mt-2 text-xs text-gray-600">
+                  {destination.caption}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Recent Updates */}
         <section id="recent-updates">
